@@ -17,6 +17,7 @@ module.exports = {
     },
     extend: {
       colors: {
+        // shadcn/ui system colors
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -49,6 +50,32 @@ module.exports = {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        
+        // School Brand Colors - Unified Theme
+        orange: {
+          50: '#fff7ed',   // Very light orange
+          100: '#ffedd5',  // Light orange
+          200: '#fed7aa',  // Lighter orange
+          300: '#fdba74',  // Light orange
+          400: '#fb923c',  // Medium orange
+          500: '#f97316',  // Main orange (for headers/components)
+          600: '#ea580c',  // Dark orange
+          700: '#c2410c',  // Darker orange
+          800: '#9a3412',  // Very dark orange
+          900: '#7c2d12',  // Darkest orange
+        },
+        blue: {
+          50: '#eff6ff',   // Very light blue
+          100: '#dbeafe',  // Light blue
+          200: '#bfdbfe',  // Lighter blue
+          300: '#93c5fd',  // Light blue
+          400: '#60a5fa',  // Medium blue
+          500: '#3b82f6',  // Main blue (for buttons)
+          600: '#2563eb',  // Dark blue
+          700: '#1d4ed8',  // Darker blue
+          800: '#1e40af',  // Very dark blue
+          900: '#1e3a8a',  // Darkest blue
         },
       },
       borderRadius: {
