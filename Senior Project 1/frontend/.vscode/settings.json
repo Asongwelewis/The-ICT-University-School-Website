@@ -2,11 +2,13 @@
   "css.validate": false,
   "less.validate": false,
   "scss.validate": false,
+  "postcss.validate": false,
   "tailwindCSS.includeLanguages": {
     "typescript": "typescript",
     "javascript": "javascript",
     "typescriptreact": "typescriptreact",
-    "javascriptreact": "javascriptreact"
+    "javascriptreact": "javascriptreact",
+    "css": "css"
   },
   "tailwindCSS.experimental.classRegex": [
     ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
@@ -14,5 +16,12 @@
   ],
   "editor.quickSuggestions": {
     "strings": true
-  }
+  },
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "emmet.includeLanguages": {
+    "tailwindcss": "css"
+  },
+  "css.customData": [".vscode/css_custom_data.json"]
 }
