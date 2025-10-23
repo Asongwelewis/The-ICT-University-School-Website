@@ -8,8 +8,12 @@
 import * as React from "react"
 import type { ToastActionElement, ToastProps } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+// Toast configuration - centralized and meaningful
+const TOAST_CONFIG = {
+    LIMIT: 3, // Allow multiple toasts for better UX
+    REMOVE_DELAY: 5000, // 5 seconds - more reasonable than 1000 seconds
+    AUTO_DISMISS_DELAY: 4000, // Auto-dismiss after 4 seconds
+} as const
 
 type ToasterToast = ToastProps & {
   id: string
@@ -69,7 +73,7 @@ const addToRemoveQueue = (toastId: string) => {
       type: "REMOVE_TOAST",
       toastId: toastId,
     })
-  }, TOAST_REMOVE_DELAY)
+  }, TOAST_CONFIG.REMOVE_DELAY)
 
   toastTimeouts.set(toastId, timeout)
 }
@@ -79,7 +83,7 @@ export const reducer = (state: State, action: Action): State => {
     case "ADD_TOAST":
       return {
         ...state,
-        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
+        toasts: [action.toast, ...state.toasts].slice(0, TOAST_CONFIG.LIMIT),
       }
 
     case "UPDATE_TOAST":
@@ -189,4 +193,35 @@ function useToast() {
   }
 }
 
-export { useToast, toast }
+// Utility functions for common toast types
+const toastUtils = {
+  success: (title: string, description?: string) =>
+    toast({
+      title,
+      description,
+      variant: "success" as const,
+    }),
+
+  error: (title: string, description?: string) =>
+    toast({
+      title,
+      description,
+      variant: "destructive" as const,
+    }),
+
+  warning: (title: string, description?: string) =>
+    toast({
+      title,
+      description,
+      variant: "warning" as const,
+    }),
+
+  info: (title: string, description?: string) =>
+    toast({
+      title,
+      description,
+      variant: "info" as const,
+    }),
+}
+
+export { useToast, toast, toastUtils }

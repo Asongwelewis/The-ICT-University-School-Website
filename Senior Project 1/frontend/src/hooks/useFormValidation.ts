@@ -145,5 +145,48 @@ export const commonValidationRules = {
       }
       return null
     }
-  })
+  }),
+  
+  // School-specific validation rules
+  studentId: {
+    required: true,
+    pattern: /^[A-Z]{2,3}\d{4,6}$/,
+    custom: (value: string) => {
+      if (value && !value.match(/^[A-Z]{2,3}\d{4,6}$/)) {
+        return 'Student ID must be in format: ABC1234 or AB123456'
+      }
+      return null
+    }
+  },
+  courseCode: {
+    required: true,
+    pattern: /^[A-Z]{2,4}\d{3,4}$/,
+    custom: (value: string) => {
+      if (value && !value.match(/^[A-Z]{2,4}\d{3,4}$/)) {
+        return 'Course code must be in format: CS101 or MATH1234'
+      }
+      return null
+    }
+  },
+  grade: {
+    required: true,
+    pattern: /^(100|[0-9]{1,2})(\.[0-9]{1,2})?$/,
+    custom: (value: string) => {
+      const numValue = parseFloat(value)
+      if (isNaN(numValue) || numValue < 0 || numValue > 100) {
+        return 'Grade must be between 0 and 100'
+      }
+      return null
+    }
+  },
+  phoneNumber: {
+    required: false,
+    pattern: /^[\+]?[1-9][\d]{0,15}$/,
+    custom: (value: string) => {
+      if (value && !value.match(/^[\+]?[1-9][\d]{0,15}$/)) {
+        return 'Please enter a valid phone number'
+      }
+      return null
+    }
+  }
 }

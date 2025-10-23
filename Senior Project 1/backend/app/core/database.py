@@ -79,3 +79,39 @@ async def check_database_connection():
     except Exception as e:
         logger.error(f"Database connection failed: {e}")
         return False
+
+
+async def get_database_health():
+    """
+    Get detailed database health information.
+    
+    Returns:
+        dict: Database health metrics
+    """
+    try:
+        with engine.connect() as connection:
+            # Check basic connectivity
+            connection.execute("SELECT 1")
+            
+            # Get connection pool info
+            pool = engine.pool
+            pool_status = {
+                "size": pool.size(),
+                "checked_in": pool.checkedin(),
+                "checked_out": pool.checkedout(),
+                "overflow": pool.overflow(),
+                "invalid": pool.invalid()
+            }
+            
+            return {
+                "status": "healthy",
+                "connection_pool": pool_status,
+                "database_url": settings.DATABASE_URL.split("@")[1] if "@" in settings.DATABASE_URL else "hidden"
+            }
+    except Exception as e:
+        logger.error(f"Database health check failed: {e}")
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "connection_pool": None
+        }

@@ -28,21 +28,37 @@ const ToastViewport = React.forwardRef<
 ))
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName
 
-const toastVariants = cva(
-    "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
-    {
-        variants: {
-            variant: {
-                default: "border bg-background text-foreground",
-                destructive:
-                    "destructive border-destructive bg-destructive text-destructive-foreground",
-            },
+// Base styles broken down for readability
+const baseToastStyles = [
+    "group pointer-events-auto relative flex w-full items-center justify-between",
+    "space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all",
+    // Swipe animations
+    "data-[swipe=cancel]:translate-x-0",
+    "data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)]",
+    "data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)]",
+    "data-[swipe=move]:transition-none",
+    // State animations
+    "data-[state=open]:animate-in data-[state=closed]:animate-out",
+    "data-[swipe=end]:animate-out data-[state=closed]:fade-out-80",
+    "data-[state=closed]:slide-out-to-right-full",
+    "data-[state=open]:slide-in-from-top-full",
+    "data-[state=open]:sm:slide-in-from-bottom-full"
+].join(" ")
+
+const toastVariants = cva(baseToastStyles, {
+    variants: {
+        variant: {
+            default: "border bg-background text-foreground",
+            destructive: "destructive border-destructive bg-destructive text-destructive-foreground",
+            success: "border-green-200 bg-green-50 text-green-800",
+            warning: "border-yellow-200 bg-yellow-50 text-yellow-800",
+            info: "border-blue-200 bg-blue-50 text-blue-800",
         },
-        defaultVariants: {
-            variant: "default",
-        },
-    }
-)
+    },
+    defaultVariants: {
+        variant: "default",
+    },
+})
 
 const Toast = React.forwardRef<
     React.ElementRef<typeof ToastPrimitives.Root>,
