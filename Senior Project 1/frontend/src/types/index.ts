@@ -1,7 +1,10 @@
+// Shared type definitions
+export type UserRole = 'admin' | 'student' | 'staff'
+
 export interface User {
   id: string
   email: string
-  role: 'admin' | 'student' | 'staff'
+  role: UserRole
   profile: UserProfile
   permissions: string[]
   isActive: boolean
