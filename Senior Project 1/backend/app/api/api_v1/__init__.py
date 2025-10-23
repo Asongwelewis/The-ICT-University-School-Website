@@ -1,1 +1,1 @@
-# This file makes the api_v1 directory a Python package
+# API v1 package

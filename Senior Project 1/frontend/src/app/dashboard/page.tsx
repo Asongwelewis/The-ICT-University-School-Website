@@ -1,17 +1,22 @@
-import { createClient } from '@/lib/supabase'
-import { redirect } from 'next/navigation'
+'use client'
 
-export default async function DashboardPage() {
-  const supabase = createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
-    redirect('/auth/login')
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import { useAuth } from '@/hooks/useAuth'
+
+export default function DashboardPage() {
+  const { user, logout } = useAuth()
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -21,15 +26,14 @@ export default async function DashboardPage() {
               <p className="text-orange-100">School Management System</p>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-orange-100">Welcome, {user.user_metadata?.full_name || user.email}</span>
-              <form action="/auth/signout" method="post">
-                <button 
-                  type="submit"
-                  className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors"
-                >
-                  Sign Out
-                </button>
-              </form>
+              <span className="text-orange-100">Welcome, {user?.full_name || user?.email}</span>
+              <span className="text-orange-200 text-sm">({user?.role})</span>
+              <button 
+                onClick={handleLogout}
+                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors"
+              >
+                Sign Out
+              </button>
             </div>
           </div>
         </div>
@@ -134,5 +138,6 @@ export default async function DashboardPage() {
         </div>
       </main>
     </div>
+    </ProtectedRoute>
   )
 }

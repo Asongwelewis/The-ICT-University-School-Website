@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase'
+import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,7 +17,11 @@ export function RegisterForm() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'student'
+    role: 'student',
+    phone: '',
+    department: '',
+    studentId: '',
+    employeeId: ''
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -25,7 +29,7 @@ export function RegisterForm() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
+  const { register } = useAuth()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData(prev => ({
@@ -57,32 +61,25 @@ export function RegisterForm() {
     }
 
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const userData = {
         email: formData.email,
         password: formData.password,
-        options: {
-          data: {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            role: formData.role,
-            full_name: `${formData.firstName} ${formData.lastName}`
-          }
-        }
-      })
-
-      if (error) {
-        setError(error.message)
-        return
+        full_name: `${formData.firstName} ${formData.lastName}`,
+        phone: formData.phone,
+        role: formData.role,
+        department: formData.department,
+        ...(formData.role === 'student' && { student_id: formData.studentId }),
+        ...(formData.role !== 'student' && { employee_id: formData.employeeId })
       }
 
-      if (data.user) {
-        setSuccess(true)
-        setTimeout(() => {
-          router.push('/auth/login')
-        }, 2000)
-      }
-    } catch (err) {
-      setError('An unexpected error occurred')
+      await register(userData)
+      
+      setSuccess(true)
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 2000)
+    } catch (err: any) {
+      setError(err.message || 'Registration failed. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -184,10 +181,84 @@ export function RegisterForm() {
             disabled={loading}
           >
             <option value="student">Student</option>
-            <option value="staff">Staff/Instructor</option>
-            <option value="admin">Administrator</option>
+            <option value="academic_staff">Academic Staff</option>
+            <option value="hr_personnel">HR Personnel</option>
+            <option value="finance_staff">Finance Staff</option>
+            <option value="marketing_team">Marketing Team</option>
+            <option value="system_admin">System Administrator</option>
           </select>
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="phone" className="text-gray-700 font-medium">
+            Phone Number
+          </Label>
+          <Input
+            id="phone"
+            name="phone"
+            type="tel"
+            value={formData.phone}
+            onChange={handleInputChange}
+            placeholder="+237123456789"
+            className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+            disabled={loading}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="department" className="text-gray-700 font-medium">
+            Department
+          </Label>
+          <Input
+            id="department"
+            name="department"
+            type="text"
+            value={formData.department}
+            onChange={handleInputChange}
+            placeholder="Computer Science"
+            className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+            required
+            disabled={loading}
+          />
+        </div>
+
+        {formData.role === 'student' && (
+          <div className="space-y-2">
+            <Label htmlFor="studentId" className="text-gray-700 font-medium">
+              Student ID
+            </Label>
+            <Input
+              id="studentId"
+              name="studentId"
+              type="text"
+              value={formData.studentId}
+              onChange={handleInputChange}
+              placeholder="ICT2024001"
+              className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+              required
+              disabled={loading}
+            />
+          </div>
+        )}
+
+        {formData.role !== 'student' && (
+          <div className="space-y-2">
+            <Label htmlFor="employeeId" className="text-gray-700 font-medium">
+              Employee ID
+            </Label>
+            <Input
+              id="employeeId"
+              name="employeeId"
+              type="text"
+              value={formData.employeeId}
+              onChange={handleInputChange}
+              placeholder="EMP2024001"
+              className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+              required
+              disabled={loading}
+            />
+          </div>
+        )}
         
         <div className="space-y-2">
           <Label htmlFor="password" className="text-gray-700 font-medium">
