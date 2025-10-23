@@ -1,98 +1,37 @@
 # Development Commands Reference
 
-## Git Workflow Commands
+## Frontend Development Commands
 
-### Daily Feature Development
-
-#### Working on Backend Changes
+### Start Frontend Development Server
 ```cmd
-# Switch to backend branch
-git checkout Backend
-git pull origin Backend
+# Navigate to frontend folder
+cd "Senior Project 1/frontend"
 
-# Make your backend changes, then save:
-git add .
-git commit -m "Feature: Description of backend changes"
-git push origin Backend
+# Install dependencies (first time only)
+npm install
+
+# Start development server
+npm run dev
 ```
 
-#### Working on Frontend Changes
+**Frontend will be available at:** http://localhost:3000
+
+### Frontend Package Management
 ```cmd
-# Switch to frontend branch
-git checkout Frontend
-git pull origin Frontend
+# Install new package
+npm install [package-name]
 
-# Make your frontend changes, then save:
-git add .
-git commit -m "Feature: Description of frontend changes"
-git push origin Frontend
-```
+# Install dev dependency
+npm install -D [package-name]
 
-### Completing a Feature (Merge to Main)
+# Update packages
+npm update
 
-#### Option A: Using GitHub Pull Requests (Recommended)
-1. Go to your GitHub repository
-2. Create pull request: `Backend` → `main`
-3. Create pull request: `Frontend` → `main`
-4. Review and merge both pull requests
+# Build for production
+npm run build
 
-#### Option B: Command Line Merge
-```cmd
-# Merge backend changes to main
-git checkout main
-git pull origin main
-git merge Backend
-git push origin main
-
-# Merge frontend changes to main
-git merge Frontend
-git push origin main
-```
-
-### Rollback Commands (When Things Go Wrong)
-
-#### Rollback Main Branch to Previous Working Version
-```cmd
-# See commit history
-git checkout main
-git log --oneline
-
-# Option A: Reset to specific commit
-git reset --hard [commit-hash]
-git push --force origin main
-
-# Option B: Go back 1 commit
-git reset --hard HEAD~1
-git push --force origin main
-
-# Option C: Revert specific problematic commit
-git revert [commit-hash-of-problem]
-git push origin main
-```
-
-#### Rollback Individual Branches
-```cmd
-# Rollback backend branch
-git checkout Backend
-git reset --hard HEAD~1
-git push --force origin Backend
-
-# Rollback frontend branch
-git checkout Frontend
-git reset --hard HEAD~1
-git push --force origin Frontend
-```
-
-### Checking Status
-```cmd
-# See current branch and changes
-git status
-
-# See all branches
-git branch -a
-
-# See commit history
-git log --oneline
+# Start production server
+npm start
 ```
 
 ## Backend Development Commands
@@ -110,6 +49,18 @@ venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
+
+# Set up environment variables (create .env file)
+# Copy from .env.example and update with your database credentials
+```
+
+### Database Setup (One Time Only)
+```cmd
+# Make sure PostgreSQL is installed and running
+# Create database: ict_university_erp
+# Update database credentials in .env file
+
+# The application will automatically create tables on first run
 ```
 
 ### Daily Backend Development
@@ -120,63 +71,69 @@ cd "Senior Project 1/backend"
 # Activate virtual environment
 venv\Scripts\activate
 
-# Run the backend server
+# Run the backend server with auto-reload
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# Alternative: Run with Python directly
+python -m app.main
 
 # Deactivate when done
 deactivate
 ```
 
-### Backend Package Management
-```cmd
-# Install new package
-pip install [package-name]
+**Backend will be available at:** 
+- API: http://localhost:8000
+- Swagger Docs: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+- Health Check: http://localhost:8000/health
 
-# Update requirements.txt
-pip freeze > requirements.txt
+## Git Workflow Commands
+
+### Daily Feature Development
+
+#### Working on Frontend Changes
+```cmd
+# Switch to frontend branch
+git checkout Frontend
+git pull origin Frontend
+
+# Make your frontend changes, then save:
+git add .
+git commit -m "Feature: Description of frontend changes"
+git push origin Frontend
 ```
 
-## Frontend Development Commands
-
-### Initial Setup (One Time Only)
+#### Working on Backend Changes
 ```cmd
-# Navigate to frontend folder
-cd "Senior Project 1/frontend"
+# Switch to backend branch
+git checkout Backend
+git pull origin Backend
 
-# Install dependencies
-npm install
+# Make your backend changes, then save:
+git add .
+git commit -m "Feature: Description of backend changes"
+git push origin Backend
 ```
 
-### Daily Frontend Development
+### Completing a Feature (Merge to Main)
 ```cmd
-# Navigate to frontend
-cd "Senior Project 1/frontend"
+# Option A: Create pull requests on GitHub
+# 1. Go to GitHub repository
+# 2. Create pull request: Backend → main
+# 3. Create pull request: Frontend → main
+# 4. Review and merge both
 
-# Run development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
-```
-
-### Frontend Package Management
-```cmd
-# Install new package
-npm install [package-name]
-
-# Install dev dependency
-npm install -D [package-name]
-
-# Update packages
-npm update
+# Option B: Command line merge
+git checkout main
+git pull origin main
+git merge Backend
+git merge Frontend
+git push origin main
 ```
 
 ## Running Both Servers Simultaneously
 
-### Option 1: Two Terminal Windows
+### Option 1: Two Terminal Windows (Recommended)
 **Terminal 1 (Backend):**
 ```cmd
 cd "Senior Project 1/backend"
@@ -190,24 +147,7 @@ cd "Senior Project 1/frontend"
 npm run dev
 ```
 
-### Option 2: Background Process (Advanced)
-```cmd
-# Start backend in background
-cd "Senior Project 1/backend"
-venv\Scripts\activate
-start /B uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-
-# Start frontend
-cd "Senior Project 1/frontend"
-npm run dev
-```
-
-## Default Server URLs
-- **Backend API:** http://localhost:8000
-- **Frontend App:** http://localhost:3000
-- **Backend Docs:** http://localhost:8000/docs
-
-## Quick Reference - Most Used Commands
+## Quick Start Commands
 
 ### Start Development Session
 ```cmd
@@ -215,77 +155,59 @@ npm run dev
 git status
 
 # 2. Choose which part to work on
-git checkout Backend    # for backend work
-# OR
 git checkout Frontend   # for frontend work
+# OR
+git checkout Backend    # for backend work
 
-# 3. Start backend (Terminal 1)
+# 3. Start frontend (Terminal 1)
+cd "Senior Project 1/frontend"
+npm run dev
+
+# 4. Start backend (Terminal 2) - if needed
 cd "Senior Project 1/backend"
 venv\Scripts\activate
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-
-# 4. Start frontend (Terminal 2)
-cd "Senior Project 1/frontend"
-npm run dev
 ```
 
 ### End Development Session
 ```cmd
-# 1. Save backend progress
-git checkout Backend
-git add .
-git commit -m "Description of backend changes"
-git push origin Backend
-
-# 2. Save frontend progress
+# 1. Save frontend progress
 git checkout Frontend
 git add .
 git commit -m "Description of frontend changes"
 git push origin Frontend
 
+# 2. Save backend progress (if worked on backend)
+git checkout Backend
+git add .
+git commit -m "Description of backend changes"
+git push origin Backend
+
 # 3. Stop servers (Ctrl+C in both terminals)
 ```
 
-### Complete Feature Workflow
-```cmd
-# 1. Work on backend
-git checkout Backend
-# Make changes...
-git add .
-git commit -m "Login: Add authentication API"
-git push origin Backend
+## Default Server URLs
+- **Frontend App:** http://localhost:3000
+- **Backend API:** http://localhost:8000
+- **Backend Docs:** http://localhost:8000/docs
 
-# 2. Work on frontend
-git checkout Frontend
-# Make changes...
-git add .
-git commit -m "Login: Add login form"
-git push origin Frontend
-
-# 3. When feature is complete and tested:
-# Create pull requests on GitHub: Backend → main, Frontend → main
-# OR merge via command line (see above)
-```
+## Authentication Pages
+- **Login:** http://localhost:3000/auth/login
+- **Register:** http://localhost:3000/auth/register
+- **Dashboard:** http://localhost:3000/dashboard
 
 ## Troubleshooting Commands
 
-### Git Issues
+### Frontend Issues
 ```cmd
-# Force pull latest changes (replace [branch] with Backend, Frontend, or main)
-git fetch origin
-git reset --hard origin/[branch]
+# Clear npm cache and reinstall
+npm cache clean --force
+rm -rf node_modules package-lock.json
+npm install
 
-# See what files changed
-git diff
-
-# Undo last commit (keep changes)
-git reset --soft HEAD~1
-
-# See current branch
-git branch
-
-# See all branches
-git branch -a
+# Check versions
+node --version
+npm --version
 ```
 
 ### Backend Issues
@@ -300,14 +222,15 @@ python --version
 where python
 ```
 
-### Frontend Issues
+### Git Issues
 ```cmd
-# Clear npm cache and reinstall
-npm cache clean --force
-rm -rf node_modules package-lock.json
-npm install
+# See current status
+git status
 
-# Check Node version
-node --version
-npm --version
+# See all branches
+git branch -a
+
+# Force pull latest changes
+git fetch origin
+git reset --hard origin/[branch-name]
 ```

@@ -1,25 +1,3 @@
-/**
- * Card Component System
- * 
- * A flexible card component with semantic sub-components for structured content.
- * Follows the school ERP design system with proper spacing and typography.
- * 
- * @example
- * ```tsx
- * <Card>
- *   <CardHeader>
- *     <CardTitle>Student Profile</CardTitle>
- *     <CardDescription>View and edit student information</CardDescription>
- *   </CardHeader>
- *   <CardContent>
- *     <p>Card content goes here</p>
- *   </CardContent>
- *   <CardFooter>
- *     <Button>Save Changes</Button>
- *   </CardFooter>
- * </Card>
- * ```
- */
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
@@ -42,16 +20,12 @@ const CardHeader = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-6", className)}
-    {...props}
-  />
+  <div ref={ref} className={cn("flex flex-col space-y-1.5 p-6", className)} {...props} />
 ))
 CardHeader.displayName = "CardHeader"
 
 const CardTitle = React.forwardRef<
-  HTMLHeadingElement,
+  HTMLParagraphElement,
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
   <h3
@@ -89,11 +63,7 @@ const CardFooter = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("flex items-center p-6 pt-0", className)}
-    {...props}
-  />
+  <div ref={ref} className={cn("flex items-center p-6 pt-0", className)} {...props} />
 ))
 CardFooter.displayName = "CardFooter"
 

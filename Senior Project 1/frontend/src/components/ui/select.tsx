@@ -1,27 +1,9 @@
-/**
- * Select Component System
- * 
- * A comprehensive select component built on Radix UI primitives.
- * Provides accessible dropdown selection with keyboard navigation.
- * 
- * @example
- * ```tsx
- * <Select>
- *   <SelectTrigger>
- *     <SelectValue placeholder="Select an option" />
- *   </SelectTrigger>
- *   <SelectContent>
- *     <SelectItem value="option1">Option 1</SelectItem>
- *     <SelectItem value="option2">Option 2</SelectItem>
- *   </SelectContent>
- * </Select>
- * ```
- */
 "use client"
 
 import * as React from "react"
 import * as SelectPrimitive from "@radix-ui/react-select"
 import { Check, ChevronDown, ChevronUp } from "lucide-react"
+
 import { cn } from "@/lib/utils"
 
 const Select = SelectPrimitive.Root
@@ -82,7 +64,8 @@ const SelectScrollDownButton = React.forwardRef<
     <ChevronDown className="h-4 w-4" />
   </SelectPrimitive.ScrollDownButton>
 ))
-SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayName
+SelectScrollDownButton.displayName =
+  SelectPrimitive.ScrollDownButton.displayName
 
 const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
