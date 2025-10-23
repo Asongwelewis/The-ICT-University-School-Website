@@ -96,7 +96,6 @@ export function ForgotPasswordForm() {
   return (
     <div className="w-full max-w-md mx-auto">
       <Card className="card-shadow border-0 overflow-hidden">
-        {/* Orange Header */}
         <CardHeader className="header-gradient text-white text-center py-8">
           <div className="flex justify-center mb-4">
             <div className="bg-white/20 p-3 rounded-full">
@@ -161,98 +160,5 @@ export function ForgotPasswordForm() {
         </CardContent>
       </Card>
     </div>
-  )
-}ord</CardTitle>
-            <CardDescription className="text-orange-100">
-              Enter your email to receive reset instructions
-            </CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="p-6 bg-white">
-        {!success ? (
-          <form onSubmit={handleResetPassword} className="space-y-5">
-            {error && (
-              <Alert variant="destructive" className="border-red-200 bg-red-50">
-                <AlertDescription className="text-red-700">{error}</AlertDescription>
-              </Alert>
-            )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-700 font-medium">
-                Email Address
-              </Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                  placeholder="Enter your email address"
-                  required
-                  disabled={loading}
-                />
-              </div>
-              <p className="text-sm text-gray-600">
-                We'll send you a link to reset your password
-              </p>
-            </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full button-gradient text-white font-medium py-2.5 hover:opacity-90 transition-opacity" 
-              disabled={loading}
-            >
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Send Reset Email
-            </Button>
-
-            <div className="text-center">
-              <Link 
-                href="/auth/login" 
-                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 hover:underline text-sm font-medium"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back to Sign In
-              </Link>
-            </div>
-          </form>
-        ) : (
-          <div className="text-center space-y-4">
-            <Alert className="border-green-200 bg-green-50">
-              <AlertDescription className="text-green-700">{success}</AlertDescription>
-            </Alert>
-            
-            <div className="space-y-3">
-              <p className="text-sm text-gray-600">
-                Didn't receive the email? Check your spam folder or try again.
-              </p>
-              
-              <Button 
-                onClick={() => {
-                  setSuccess('')
-                  setEmail('')
-                }}
-                variant="outline"
-                className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
-              >
-                Try Again
-              </Button>
-              
-              <Link 
-                href="/auth/login" 
-                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 hover:underline text-sm font-medium"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back to Sign In
-              </Link>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
   )
 }

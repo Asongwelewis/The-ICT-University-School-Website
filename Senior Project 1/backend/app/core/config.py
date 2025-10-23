@@ -61,11 +61,26 @@ class Settings(BaseSettings):
     @classmethod
     def validate_secret_key(cls, v: str, info) -> str:
         """Ensure secret key is secure in production."""
-        if info.data.get("ENVIRONMENT") == "production":
-            if v == "your-secret-key-change-in-production" or len(v) < 32:
+        environment = info.data.get("ENVIRONMENT", "development")
+        
+        if environment == "production":
+            if not v or len(v) < 32:
                 raise ValueError(
                     "SECRET_KEY must be set to a secure value in production (min 32 characters)"
                 )
+            # Check for common insecure patterns
+            insecure_patterns = [
+                "your-secret-key",
+                "change-me",
+                "secret",
+                "password",
+                "123456"
+            ]
+            if any(pattern in v.lower() for pattern in insecure_patterns):
+                raise ValueError(
+                    "SECRET_KEY appears to use an insecure pattern. Use a cryptographically secure random string."
+                )
+        
         return v
 
     @field_validator("DATABASE_URL")

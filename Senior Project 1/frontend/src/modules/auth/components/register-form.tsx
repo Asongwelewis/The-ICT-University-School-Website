@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2, Mail, Lock, User, GraduationCap, Users } from 'lucide-react'
+import { Loader2, Mail, Lock, User, GraduationCap } from 'lucide-react'
 import Link from 'next/link'
 
 export function RegisterForm() {
@@ -68,7 +68,7 @@ export function RegisterForm() {
             last_name: formData.lastName,
             role: formData.role,
             student_id: formData.studentId,
-            department: formData.department,
+            department: formData.department
           }
         }
       })
@@ -80,7 +80,6 @@ export function RegisterForm() {
 
       if (data.user) {
         setSuccess('Registration successful! Please check your email to verify your account.')
-        // Optionally redirect after a delay
         setTimeout(() => {
           router.push('/auth/login')
         }, 3000)
@@ -93,18 +92,17 @@ export function RegisterForm() {
   }
 
   return (
-    <div className="w-full max-w-lg mx-auto">
+    <div className="w-full max-w-md mx-auto">
       <Card className="card-shadow border-0 overflow-hidden">
-        {/* Orange Header */}
         <CardHeader className="header-gradient text-white text-center py-8">
           <div className="flex justify-center mb-4">
             <div className="bg-white/20 p-3 rounded-full">
-              <Users className="h-8 w-8 text-white" />
+              <GraduationCap className="h-8 w-8 text-white" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Join Our School</CardTitle>
+          <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
           <CardDescription className="text-orange-100">
-            Create your account to access the ERP System
+            Join the ICT University community
           </CardDescription>
         </CardHeader>
         
@@ -122,7 +120,6 @@ export function RegisterForm() {
               </Alert>
             )}
             
-            {/* Name Fields */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName" className="text-gray-700 font-medium">
@@ -142,7 +139,7 @@ export function RegisterForm() {
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="lastName" className="text-gray-700 font-medium">
                   Last Name
@@ -163,7 +160,6 @@ export function RegisterForm() {
               </div>
             </div>
 
-            {/* Email */}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-gray-700 font-medium">
                 Email Address
@@ -183,23 +179,22 @@ export function RegisterForm() {
               </div>
             </div>
 
-            {/* Role Selection */}
             <div className="space-y-2">
-              <Label className="text-gray-700 font-medium">Role</Label>
+              <Label htmlFor="role" className="text-gray-700 font-medium">
+                Role
+              </Label>
               <Select value={formData.role} onValueChange={(value) => handleInputChange('role', value)}>
                 <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                   <SelectValue placeholder="Select your role" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="student">Student</SelectItem>
-                  <SelectItem value="instructor">Instructor</SelectItem>
                   <SelectItem value="staff">Staff</SelectItem>
                   <SelectItem value="admin">Administrator</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Conditional Fields */}
             {formData.role === 'student' && (
               <div className="space-y-2">
                 <Label htmlFor="studentId" className="text-gray-700 font-medium">
@@ -217,25 +212,25 @@ export function RegisterForm() {
               </div>
             )}
 
-            {(formData.role === 'instructor' || formData.role === 'staff') && (
-              <div className="space-y-2">
-                <Label htmlFor="department" className="text-gray-700 font-medium">
-                  Department
-                </Label>
-                <Input
-                  id="department"
-                  type="text"
-                  value={formData.department}
-                  onChange={(e) => handleInputChange('department', e.target.value)}
-                  className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                  placeholder="Enter your department"
-                  disabled={loading}
-                />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="department" className="text-gray-700 font-medium">
+                Department
+              </Label>
+              <Select value={formData.department} onValueChange={(value) => handleInputChange('department', value)}>
+                <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                  <SelectValue placeholder="Select your department" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="computer-science">Computer Science</SelectItem>
+                  <SelectItem value="information-technology">Information Technology</SelectItem>
+                  <SelectItem value="software-engineering">Software Engineering</SelectItem>
+                  <SelectItem value="data-science">Data Science</SelectItem>
+                  <SelectItem value="cybersecurity">Cybersecurity</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-            {/* Password Fields */}
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-gray-700 font-medium">
                   Password
@@ -248,13 +243,13 @@ export function RegisterForm() {
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
                     className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="Create a password"
+                    placeholder="Password"
                     required
                     disabled={loading}
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword" className="text-gray-700 font-medium">
                   Confirm Password
@@ -267,31 +262,12 @@ export function RegisterForm() {
                     value={formData.confirmPassword}
                     onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                     className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="Confirm your password"
+                    placeholder="Confirm password"
                     required
                     disabled={loading}
                   />
                 </div>
               </div>
-            </div>
-
-            {/* Terms and Conditions */}
-            <div className="flex items-start space-x-2 text-sm">
-              <input 
-                type="checkbox" 
-                className="mt-1 rounded border-gray-300 text-blue-500 focus:ring-blue-500" 
-                required 
-              />
-              <span className="text-gray-600">
-                I agree to the{' '}
-                <Link href="/terms" className="text-blue-500 hover:text-blue-600 font-medium">
-                  Terms of Service
-                </Link>{' '}
-                and{' '}
-                <Link href="/privacy" className="text-blue-500 hover:text-blue-600 font-medium">
-                  Privacy Policy
-                </Link>
-              </span>
             </div>
             
             <Button 
@@ -307,10 +283,10 @@ export function RegisterForm() {
               <p className="text-gray-600">
                 Already have an account?{' '}
                 <Link 
-                  href="/auth/login" 
-                  className="text-blue-500 hover:text-blue-600 font-medium"
+                  href="/auth/login"
+                  className="text-blue-600 hover:text-blue-700 font-medium hover:underline"
                 >
-                  Sign in here
+                  Sign In
                 </Link>
               </p>
             </div>
@@ -318,150 +294,5 @@ export function RegisterForm() {
         </CardContent>
       </Card>
     </div>
-  )
-}Alert className="border-green-200 bg-green-50">
-              <AlertDescription className="text-green-700">{success}</AlertDescription>
-            </Alert>
-          )}
-          
-          {/* Name Fields */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="firstName" className="text-gray-700 font-medium">
-                First Name
-              </Label>
-              <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  id="firstName"
-                  type="text"
-                  value={formData.firstName}
-                  onChange={(e) => handleInputChange('firstName', e.target.value)}
-                  className="pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                  placeholder="First name"
-                  required
-                  disabled={loading}
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="lastName" className="text-gray-700 font-medium">
-                Last Name
-              </Label>
-              <Input
-                id="lastName"
-                type="text"
-                value={formData.lastName}
-                onChange={(e) => handleInputChange('lastName', e.target.value)}
-                className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                placeholder="Last name"
-                required
-                disabled={loading}
-              />
-            </div>
-          </div>
-
-          {/* Email */}
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-gray-700 font-medium">
-              Email Address
-            </Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                className="pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                placeholder="Enter your email"
-                required
-                disabled={loading}
-              />
-            </div>
-          </div>
-
-          {/* Role Selection */}
-          <div className="space-y-2">
-            <Label className="text-gray-700 font-medium">
-              Role
-            </Label>
-            <div className="relative">
-              <Users className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10" />
-              <Select value={formData.role} onValueChange={(value) => handleInputChange('role', value)}>
-                <SelectTrigger className="pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                  <SelectValue placeholder="Select your role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="student">Student</SelectItem>
-                  <SelectItem value="instructor">Instructor</SelectItem>
-                  <SelectItem value="staff">Staff</SelectItem>
-                  <SelectItem value="admin">Administrator</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          {/* Password Fields */}
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-gray-700 font-medium">
-              Password
-            </Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => handleInputChange('password', e.target.value)}
-                className="pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                placeholder="Create a password"
-                required
-                disabled={loading}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword" className="text-gray-700 font-medium">
-              Confirm Password
-            </Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                className="pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                placeholder="Confirm your password"
-                required
-                disabled={loading}
-              />
-            </div>
-          </div>
-          
-          <Button 
-            type="submit" 
-            className="w-full button-gradient text-white font-medium py-2.5 hover:opacity-90 transition-opacity" 
-            disabled={loading}
-          >
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create Account
-          </Button>
-
-          <div className="text-center text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link 
-              href="/auth/login" 
-              className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
-            >
-              Sign in here
-            </Link>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
   )
 }

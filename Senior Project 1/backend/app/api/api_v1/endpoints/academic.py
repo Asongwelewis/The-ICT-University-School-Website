@@ -8,9 +8,31 @@ router = APIRouter()
 
 
 @router.get("/courses", response_model=List[CourseResponse])
-async def get_courses(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    # TODO: Implement course retrieval logic
-    return []
+async def get_courses(
+    skip: int = 0, 
+    limit: int = 100, 
+    db: Session = Depends(get_db)
+):
+    """
+    Retrieve courses with pagination.
+    
+    Args:
+        skip: Number of records to skip (for pagination)
+        limit: Maximum number of records to return
+        db: Database session
+    
+    Returns:
+        List of courses
+    """
+    try:
+        # TODO: Implement actual database query
+        # courses = db.query(Course).offset(skip).limit(limit).all()
+        return []
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve courses: {str(e)}"
+        )
 
 
 @router.post("/courses", response_model=CourseResponse)
