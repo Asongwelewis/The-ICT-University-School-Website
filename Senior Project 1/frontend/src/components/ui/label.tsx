@@ -1,3 +1,16 @@
+/**
+ * Label Component
+ * 
+ * Accessible label component for form inputs with proper styling.
+ * 
+ * @example
+ * ```tsx
+ * <Label htmlFor="email">Email Address</Label>
+ * <Input id="email" type="email" />
+ * ```
+ */
+"use client"
+
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
 import { cva, type VariantProps } from "class-variance-authority"
