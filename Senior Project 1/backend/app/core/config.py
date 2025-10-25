@@ -156,11 +156,32 @@ class Settings(BaseSettings):
         """Check if running in development environment"""
         return self.ENVIRONMENT == Environment.DEVELOPMENT
     
+    # Database Configuration
+    DATABASE_URL: str = Field(
+        default="sqlite:///./ict_university.db",
+        env="DATABASE_URL",
+        description="Database connection URL"
+    )
+    
+    # PostgreSQL Configuration (for future use)
+    POSTGRES_SERVER: str = Field(default="localhost", env="POSTGRES_SERVER")
+    POSTGRES_USER: str = Field(default="postgres", env="POSTGRES_USER")
+    POSTGRES_PASSWORD: str = Field(default="", env="POSTGRES_PASSWORD")
+    POSTGRES_DB: str = Field(default="ict_university", env="POSTGRES_DB")
+    POSTGRES_PORT: int = Field(default=5432, env="POSTGRES_PORT")
+    
     @property
     def database_url(self) -> str:
-        """Construct database URL (placeholder for future database integration)"""
-        # This would be used if you add PostgreSQL later
-        return f"postgresql://user:pass@localhost/ict_university"
+        """Get the database URL, with fallback to PostgreSQL construction"""
+        if self.DATABASE_URL and self.DATABASE_URL != "sqlite:///./ict_university.db":
+            return self.DATABASE_URL
+        
+        # Construct PostgreSQL URL if components are provided
+        if self.POSTGRES_PASSWORD:
+            return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        
+        # Default to SQLite for development
+        return "sqlite:///./ict_university.db"
     
     @validator('SUPABASE_URL')
     def validate_supabase_url(cls, v):
