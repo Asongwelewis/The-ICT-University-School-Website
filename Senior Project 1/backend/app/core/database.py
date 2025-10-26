@@ -12,7 +12,7 @@ from sqlalchemy import create_engine, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
-from typing import Generator
+from typing import Generator, Optional
 import logging
 
 from app.core.config import settings
@@ -21,15 +21,31 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 # Create SQLAlchemy engine with connection pooling
-engine = create_engine(
-    str(settings.DATABASE_URL),
-    # Connection pool settings for production
-    pool_pre_ping=True,  # Verify connections before use
-    pool_recycle=300,    # Recycle connections every 5 minutes
-    pool_size=20,        # Number of connections to maintain
-    max_overflow=30,     # Additional connections when pool is full
-    echo=settings.DEBUG, # Log SQL queries in debug mode
-)
+def create_database_engine():
+    """Create database engine with appropriate configuration"""
+    database_url = settings.database_url
+    
+    # Configure engine based on database type
+    if database_url.startswith("sqlite"):
+        # SQLite configuration
+        return create_engine(
+            database_url,
+            poolclass=StaticPool,
+            connect_args={"check_same_thread": False},
+            echo=settings.DEBUG,
+        )
+    else:
+        # PostgreSQL configuration
+        return create_engine(
+            database_url,
+            pool_pre_ping=True,  # Verify connections before use
+            pool_recycle=300,    # Recycle connections every 5 minutes
+            pool_size=20,        # Number of connections to maintain
+            max_overflow=30,     # Additional connections when pool is full
+            echo=settings.DEBUG, # Log SQL queries in debug mode
+        )
+
+engine = create_database_engine()
 
 # Create session factory
 SessionLocal = sessionmaker(
@@ -38,8 +54,8 @@ SessionLocal = sessionmaker(
     bind=engine
 )
 
-# Create base class for all database models
-Base = declarative_base()
+# Import the Base class from models
+from app.models.base import Base
 
 # Metadata for database schema management
 metadata = MetaData()
@@ -64,11 +80,36 @@ def get_db() -> Generator[Session, None, None]:
     try:
         yield db
     except Exception as e:
-        logger.error(f"Database session error: {e}")
+        logger.error(f"Database session error: {e}", exc_info=True)
         db.rollback()
         raise
     finally:
         db.close()
+
+
+class DatabaseSession:
+    """Context manager for database sessions outside of FastAPI dependencies"""
+    
+    def __init__(self, auto_commit: bool = True):
+        self.auto_commit = auto_commit
+        self.db: Optional[Session] = None
+    
+    def __enter__(self) -> Session:
+        self.db = SessionLocal()
+        return self.db
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.db:
+            try:
+                if exc_type is None and self.auto_commit:
+                    self.db.commit()
+                else:
+                    self.db.rollback()
+            except Exception as e:
+                logger.error(f"Error during session cleanup: {e}", exc_info=True)
+                self.db.rollback()
+            finally:
+                self.db.close()
 
 
 def init_db() -> None:
@@ -77,23 +118,27 @@ def init_db() -> None:
     
     This function:
     - Creates all database tables
-    - Sets up initial admin user
-    - Creates default academic year data
-    - Initializes system settings
+    - Sets up initial system settings
+    - Creates default departments
+    - Initializes fee structures
     """
     try:
         # Import all models to ensure they are registered with SQLAlchemy
-        from app.models.user import User
-        from app.models.academic import Course, Grade, Attendance
-        # Import other models as they are created
+        from app.models import (
+            Profile, Department, Course, Enrollment, Attendance, Grade,
+            FeeStructure, Invoice, Payment, Employee, LeaveRequest,
+            Campaign, Lead, SystemSetting, AuditLog, Attachment
+        )
         
         # Create all tables
         Base.metadata.create_all(bind=engine)
         
         logger.info("Database tables created successfully")
         
-        # Create default admin user if it doesn't exist
-        _create_default_admin()
+        # Initialize default data in the same transaction context
+        with DatabaseSession() as db:
+            _init_system_settings(db)
+            _init_departments(db)
         
         logger.info("Database initialization completed")
         
@@ -102,53 +147,51 @@ def init_db() -> None:
         raise
 
 
-def _create_default_admin() -> None:
-    """
-    Create default system administrator account
+
+
+
+def _init_system_settings(db: Session) -> None:
+    """Initialize default system settings"""
+    from app.models.system import SystemSetting
     
-    This creates the initial admin user that can be used to:
-    - Access the system for the first time
-    - Create other users and configure the system
-    - Manage initial setup
-    """
-    from app.models.user import User
-    from app.core.security import get_password_hash
-    from app.core.config import UserRoles
+    default_settings = [
+        ("university_name", "ICT University", "Official university name", "general", True),
+        ("academic_year", "2024-2025", "Current academic year", "academic", True),
+        ("current_semester", "Fall 2024", "Current semester", "academic", True),
+        ("currency", "XAF", "Default currency", "financial", True),
+    ]
     
-    db = SessionLocal()
-    try:
-        # Check if admin user already exists
-        admin_user = db.query(User).filter(
-            User.email == settings.SUPER_ADMIN_EMAIL
-        ).first()
-        
-        if not admin_user:
-            # Create default admin user
-            admin_user = User(
-                email=settings.SUPER_ADMIN_EMAIL,
-                username="admin",
-                full_name="System Administrator",
-                hashed_password=get_password_hash(settings.DEFAULT_ADMIN_PASSWORD),
-                role=UserRoles.SYSTEM_ADMIN,
-                is_active=True,
-                is_verified=True,
-                is_superuser=True,
+    for key, value, desc, category, is_public in default_settings:
+        if not db.query(SystemSetting).filter(SystemSetting.setting_key == key).first():
+            setting = SystemSetting(
+                setting_key=key,
+                setting_value=value,
+                description=desc,
+                category=category,
+                is_public=is_public
             )
-            
-            db.add(admin_user)
-            db.commit()
-            db.refresh(admin_user)
-            
-            logger.info(f"Default admin user created: {settings.SUPER_ADMIN_EMAIL}")
-        else:
-            logger.info("Default admin user already exists")
-            
-    except Exception as e:
-        logger.error(f"Failed to create default admin user: {e}")
-        db.rollback()
-        raise
-    finally:
-        db.close()
+            db.add(setting)
+    
+    logger.info("System settings initialized")
+
+
+def _init_departments(db: Session) -> None:
+    """Initialize default departments"""
+    from app.models.departments import Department
+    
+    default_departments = [
+        ("Computer Science", "CS", "Computer Science and Information Technology"),
+        ("Business Administration", "BA", "Business and Management Studies"),
+        ("Engineering", "ENG", "Engineering and Applied Sciences"),
+        ("Mathematics", "MATH", "Mathematics and Statistics"),
+    ]
+    
+    for name, code, desc in default_departments:
+        if not db.query(Department).filter(Department.code == code).first():
+            dept = Department(name=name, code=code, description=desc)
+            db.add(dept)
+    
+    logger.info("Departments initialized")
 
 
 def check_db_connection() -> bool:
@@ -161,7 +204,8 @@ def check_db_connection() -> bool:
     try:
         db = SessionLocal()
         # Execute a simple query to test connection
-        db.execute("SELECT 1")
+        from sqlalchemy import text
+        db.execute(text("SELECT 1"))
         db.close()
         return True
     except Exception as e:
@@ -205,6 +249,43 @@ class DatabaseManager:
     """
     
     @staticmethod
+    def create_tables() -> bool:
+        """
+        Create all database tables
+        
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            Base.metadata.create_all(bind=engine)
+            logger.info("Database tables created successfully")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to create tables: {e}", exc_info=True)
+            return False
+    
+    @staticmethod
+    def drop_tables() -> bool:
+        """
+        Drop all database tables
+        
+        WARNING: This will delete all data!
+        
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        if settings.is_production:
+            raise ValueError("Cannot drop tables in production environment")
+        
+        try:
+            Base.metadata.drop_all(bind=engine)
+            logger.info("Database tables dropped successfully")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to drop tables: {e}", exc_info=True)
+            return False
+    
+    @staticmethod
     def health_check() -> dict:
         """
         Perform comprehensive database health check
@@ -213,31 +294,57 @@ class DatabaseManager:
             dict: Health check results with status and metrics
         """
         try:
-            db = SessionLocal()
-            
-            # Test basic connection
-            result = db.execute("SELECT version()").fetchone()
-            db_version = result[0] if result else "Unknown"
-            
-            # Test table access
-            from app.models.user import User
-            user_count = db.query(User).count()
-            
-            db.close()
-            
-            return {
-                "status": "healthy",
-                "database_version": db_version,
-                "user_count": user_count,
-                "connection_pool_size": engine.pool.size(),
-                "checked_out_connections": engine.pool.checkedout(),
-            }
-            
+            with DatabaseSession(auto_commit=False) as db:
+                # Test basic connection
+                from sqlalchemy import text
+                result = db.execute(text("SELECT 1 as test")).fetchone()
+                connection_test = result[0] == 1 if result else False
+                
+                # Get database version (works for both SQLite and PostgreSQL)
+                try:
+                    version_result = db.execute(text("SELECT sqlite_version()")).fetchone()
+                    db_version = f"SQLite {version_result[0]}" if version_result else "Unknown"
+                except Exception:
+                    try:
+                        version_result = db.execute(text("SELECT version()")).fetchone()
+                        db_version = version_result[0] if version_result else "Unknown"
+                    except Exception:
+                        db_version = "Unknown"
+                
+                # Test table access
+                profile_count = 0
+                try:
+                    from app.models.profiles import Profile
+                    profile_count = db.query(Profile).count()
+                except Exception as e:
+                    logger.warning(f"Could not count profiles: {e}")
+                
+                # Pool information (not available for SQLite)
+                pool_info = {}
+                try:
+                    pool_info = {
+                        "connection_pool_size": engine.pool.size(),
+                        "checked_out_connections": engine.pool.checkedout(),
+                    }
+                except AttributeError:
+                    pool_info = {"pool_info": "Not available (SQLite)"}
+                
+                result = {
+                    "status": "healthy" if connection_test else "degraded",
+                    "database_version": db_version,
+                    "profile_count": profile_count,
+                    "connection_test": connection_test,
+                }
+                result.update(pool_info)
+                
+                return result
+                
         except Exception as e:
-            logger.error(f"Database health check failed: {e}")
+            logger.error(f"Database health check failed: {e}", exc_info=True)
             return {
                 "status": "unhealthy",
-                "error": str(e)
+                "error": str(e),
+                "error_type": type(e).__name__
             }
     
     @staticmethod
@@ -248,13 +355,30 @@ class DatabaseManager:
         Returns:
             dict: Connection details and statistics
         """
-        return {
-            "database_url": str(settings.DATABASE_URL).replace(
-                settings.POSTGRES_PASSWORD, "***"
-            ),
-            "pool_size": engine.pool.size(),
-            "max_overflow": engine.pool._max_overflow,
-            "checked_out": engine.pool.checkedout(),
-            "checked_in": engine.pool.checkedin(),
-            "invalid": engine.pool.invalid(),
+        database_url = settings.database_url
+        
+        # Mask sensitive information
+        if settings.POSTGRES_PASSWORD and settings.POSTGRES_PASSWORD in database_url:
+            masked_url = database_url.replace(settings.POSTGRES_PASSWORD, "***")
+        else:
+            masked_url = database_url
+        
+        connection_info = {
+            "database_url": masked_url,
+            "database_type": "sqlite" if database_url.startswith("sqlite") else "postgresql",
         }
+        
+        # Add pool information if available (not available for SQLite)
+        try:
+            connection_info.update({
+                "pool_size": engine.pool.size(),
+                "max_overflow": getattr(engine.pool, '_max_overflow', 0),
+                "checked_out": engine.pool.checkedout(),
+                "checked_in": engine.pool.checkedin(),
+                "invalid": engine.pool.invalid(),
+            })
+        except AttributeError:
+            # SQLite doesn't have connection pooling
+            connection_info["pool_info"] = "Not available (SQLite)"
+        
+        return connection_info

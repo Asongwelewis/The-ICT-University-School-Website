@@ -537,13 +537,364 @@ All authentication endpoints are now tested and documented. Your frontend can in
 
 ---
 
+---
+
+## 🗄️ Database Models and Data Layer
+
+### **Completed: October 25, 2025**
+
+The ICT University ERP System now includes a comprehensive database layer with SQLAlchemy models and repository patterns for all major modules.
+
+#### **Database Architecture**
+
+**Database Provider:** Supabase (PostgreSQL)  
+**ORM:** SQLAlchemy with Pydantic schemas  
+**Connection:** Connection pooling with automatic retry  
+**Testing:** SQLite for development/testing  
+
+#### **Core Models Implemented**
+
+##### **1. Profile Model (`profiles` table)**
+Extends Supabase auth.users with additional user information:
+
+```python
+class Profile:
+    id: UUID                    # References auth.users(id)
+    email: str                  # User email
+    full_name: str             # Full name
+    phone: str                 # Phone number
+    role: UserRole             # User role (student, staff, admin, etc.)
+    department: str            # Department name
+    student_id: str            # Student ID (for students)
+    employee_id: str           # Employee ID (for staff)
+    is_active: bool            # Account status
+    avatar_url: str            # Profile picture URL
+    date_of_birth: date        # Date of birth
+    address: str               # Physical address
+    emergency_contact: str     # Emergency contact name
+    emergency_phone: str       # Emergency contact phone
+    timezone: str              # User timezone
+    language: str              # Preferred language
+    email_notifications: bool  # Email notification preference
+```
+
+**Supported Roles:**
+- `student` - Student users
+- `academic_staff` - Teachers and academic personnel
+- `hr_personnel` - Human resources staff
+- `finance_staff` - Financial management staff
+- `marketing_team` - Marketing personnel
+- `system_admin` - System administrators
+
+##### **2. Academic Models**
+
+**Course Model (`courses` table):**
+```python
+class Course:
+    id: UUID
+    course_code: str           # Unique course code (e.g., CS101)
+    course_name: str           # Course name
+    description: str           # Course description
+    credits: int               # Credit hours (default: 3)
+    department_id: UUID        # Foreign key to departments
+    instructor_id: UUID        # Foreign key to profiles (instructor)
+    semester: str              # Semester (Fall, Spring, Summer)
+    academic_year: str         # Academic year (2024-2025)
+    is_active: bool            # Course status
+```
+
+**Enrollment Model (`enrollments` table):**
+```python
+class Enrollment:
+    id: UUID
+    student_id: UUID           # Foreign key to profiles (student)
+    course_id: UUID            # Foreign key to courses
+    enrollment_date: date      # Date of enrollment
+    status: str                # enrolled, completed, dropped, failed
+    grade: str                 # Final grade (A, B, C, D, F)
+    grade_points: decimal      # GPA points
+```
+
+**Attendance Model (`attendance` table):**
+```python
+class Attendance:
+    id: UUID
+    student_id: UUID           # Foreign key to profiles (student)
+    course_id: UUID            # Foreign key to courses
+    attendance_date: date      # Date of attendance
+    status: str                # present, absent, late, excused
+    notes: str                 # Additional notes
+    recorded_by: UUID          # Foreign key to profiles (recorder)
+```
+
+**Grade Model (`grades` table):**
+```python
+class Grade:
+    id: UUID
+    user_id: UUID              # Foreign key to profiles (student)
+    course_id: UUID            # Foreign key to courses
+    assignment_id: UUID        # Reference to assignment
+    grade: decimal             # Grade received
+    max_grade: decimal         # Maximum possible grade
+    feedback: str              # Instructor feedback
+    graded_by: UUID            # Foreign key to profiles (grader)
+```
+
+##### **3. Finance Models**
+
+**FeeStructure Model (`fee_structure` table):**
+```python
+class FeeStructure:
+    id: UUID
+    fee_type: str              # Type of fee (tuition, registration, etc.)
+    amount: decimal            # Fee amount
+    department_id: UUID        # Foreign key to departments
+    academic_year: str         # Academic year
+    semester: str              # Semester (optional)
+    is_active: bool            # Fee status
+```
+
+**Invoice Model (`invoices` table):**
+```python
+class Invoice:
+    id: UUID
+    invoice_number: str        # Unique invoice number
+    student_id: UUID           # Foreign key to profiles (student)
+    amount: decimal            # Invoice amount
+    due_date: date             # Payment due date
+    status: str                # pending, paid, overdue, cancelled
+    description: str           # Invoice description
+    academic_year: str         # Academic year
+    semester: str              # Semester
+    created_by: UUID           # Foreign key to profiles (creator)
+```
+
+**Payment Model (`payments` table):**
+```python
+class Payment:
+    id: UUID
+    payment_reference: str     # Unique payment reference
+    invoice_id: UUID           # Foreign key to invoices
+    student_id: UUID           # Foreign key to profiles (student)
+    amount: decimal            # Payment amount
+    payment_method: str        # cash, bank_transfer, mobile_money, card, cheque
+    payment_date: date         # Date of payment
+    status: str                # pending, completed, failed, refunded
+    notes: str                 # Payment notes
+    processed_by: UUID         # Foreign key to profiles (processor)
+```
+
+##### **4. HR Models**
+
+**Employee Model (`employees` table):**
+```python
+class Employee:
+    id: UUID                   # References profiles(id)
+    employee_number: str       # Unique employee number
+    position: str              # Job position
+    hire_date: date            # Date of hire
+    salary: decimal            # Employee salary
+    employment_type: str       # full_time, part_time, contract, intern
+    manager_id: UUID           # Foreign key to profiles (manager)
+    is_active: bool            # Employment status
+```
+
+**LeaveRequest Model (`leave_requests` table):**
+```python
+class LeaveRequest:
+    id: UUID
+    employee_id: UUID          # Foreign key to employees
+    leave_type: str            # annual, sick, maternity, paternity, emergency, unpaid
+    start_date: date           # Leave start date
+    end_date: date             # Leave end date
+    days_requested: int        # Number of days requested
+    reason: str                # Reason for leave
+    status: str                # pending, approved, rejected, cancelled
+    approved_by: UUID          # Foreign key to profiles (approver)
+    approved_at: datetime      # Approval timestamp
+    comments: str              # Approval/rejection comments
+```
+
+##### **5. Marketing Models**
+
+**Campaign Model (`campaigns` table):**
+```python
+class Campaign:
+    id: UUID
+    name: str                  # Campaign name
+    description: str           # Campaign description
+    campaign_type: str         # email, social_media, print, radio, tv, online, event
+    start_date: date           # Campaign start date
+    end_date: date             # Campaign end date
+    budget: decimal            # Campaign budget
+    target_audience: str       # Target audience description
+    status: str                # draft, active, paused, completed, cancelled
+    created_by: UUID           # Foreign key to profiles (creator)
+```
+
+**Lead Model (`leads` table):**
+```python
+class Lead:
+    id: UUID
+    first_name: str            # Lead's first name
+    last_name: str             # Lead's last name
+    email: str                 # Lead's email
+    phone: str                 # Lead's phone
+    source: str                # website, social_media, referral, advertisement, event, cold_call, other
+    status: str                # new, contacted, qualified, converted, lost
+    interest_level: str        # low, medium, high
+    program_interest: str      # Program of interest
+    notes: str                 # Additional notes
+    assigned_to: UUID          # Foreign key to profiles (assigned user)
+    converted_at: datetime     # Conversion timestamp
+```
+
+##### **6. System Models**
+
+**Department Model (`departments` table):**
+```python
+class Department:
+    id: UUID
+    name: str                  # Department name
+    code: str                  # Department code (unique)
+    description: str           # Department description
+    head_of_department: UUID   # Foreign key to profiles (department head)
+    is_active: bool            # Department status
+```
+
+**SystemSetting Model (`system_settings` table):**
+```python
+class SystemSetting:
+    id: UUID
+    setting_key: str           # Unique setting key
+    setting_value: str         # Setting value
+    description: str           # Setting description
+    category: str              # Setting category
+    is_public: bool            # Whether setting is public
+    updated_by: UUID           # Foreign key to profiles (updater)
+```
+
+**AuditLog Model (`audit_log` table):**
+```python
+class AuditLog:
+    id: UUID
+    table_name: str            # Table that was modified
+    record_id: UUID            # ID of the modified record
+    action: str                # INSERT, UPDATE, DELETE
+    old_values: JSON           # Previous values
+    new_values: JSON           # New values
+    user_id: UUID              # Foreign key to profiles (user who made change)
+    timestamp: datetime        # When the change occurred
+```
+
+**Attachment Model (`attachments` table):**
+```python
+class Attachment:
+    id: UUID
+    file_name: str             # Original file name
+    file_url: str              # File storage URL
+    file_type: str             # File MIME type
+    file_size: int             # File size in bytes
+    uploaded_by: UUID          # Foreign key to profiles (uploader)
+    related_id: UUID           # ID of related record
+    related_type: str          # Type of related record (polymorphic)
+```
+
+#### **Repository Pattern Implementation**
+
+Each model has a corresponding repository class that provides clean data access methods:
+
+**Base Repository:**
+```python
+class BaseRepository:
+    def create(obj_in: Dict) -> Model
+    def get(id: UUID) -> Optional[Model]
+    def get_multi(skip: int, limit: int, filters: Dict) -> List[Model]
+    def update(id: UUID, obj_in: Dict) -> Optional[Model]
+    def delete(id: UUID) -> bool
+    def count(filters: Dict) -> int
+    def exists(id: UUID) -> bool
+```
+
+**Specialized Repositories:**
+- `ProfileRepository` - User profile operations
+- `AcademicRepository` - Course, enrollment, attendance, grade operations
+- `FinanceRepository` - Invoice, payment, fee operations
+- `HRRepository` - Employee, leave request operations
+- `MarketingRepository` - Campaign, lead operations
+
+#### **Database Features**
+
+✅ **Automatic Timestamps** - All models have `created_at` and `updated_at`  
+✅ **UUID Primary Keys** - All tables use UUID for better security  
+✅ **Relationship Mapping** - Proper foreign key relationships  
+✅ **Data Validation** - Pydantic schemas for input validation  
+✅ **Connection Pooling** - Optimized database connections  
+✅ **Migration Support** - Automatic table creation and updates  
+✅ **Seed Data** - Default departments and system settings  
+✅ **Comprehensive Testing** - Full test coverage for all models  
+
+#### **Database Initialization**
+
+The system automatically:
+1. Creates all database tables on startup
+2. Initializes default departments (CS, BA, ENG, MATH)
+3. Sets up system settings (university name, academic year, etc.)
+4. Validates all model relationships
+5. Runs comprehensive tests
+
+#### **Security Features**
+
+🔒 **Row Level Security** - Supabase RLS policies enabled  
+🔒 **Encrypted Connections** - All database connections use SSL/TLS  
+🔒 **Input Validation** - All inputs validated through Pydantic schemas  
+🔒 **Audit Logging** - All changes tracked in audit_log table  
+🔒 **Role-Based Access** - Database access controlled by user roles  
+
+---
+
 ## 📚 Additional Endpoints Available
 
 The system also includes endpoints for:
-- **Academic Management** (`/api/v1/academic/*`)
-- **Financial Management** (`/api/v1/finance/*`)
-- **HR Management** (`/api/v1/hr/*`)
-- **Marketing Management** (`/api/v1/marketing/*`)
-- **System Administration** (`/api/v1/admin/*`)
+- **Academic Management** (`/api/v1/academic/*`) - *Coming Next*
+- **Financial Management** (`/api/v1/finance/*`) - *Planned*
+- **HR Management** (`/api/v1/hr/*`) - *Planned*
+- **Marketing Management** (`/api/v1/marketing/*`) - *Planned*
+- **System Administration** (`/api/v1/admin/*`) - *Planned*
 
 *Documentation for additional modules will be added as they are implemented and tested.*
+
+---
+
+## 🔄 Development Status
+
+### ✅ **Completed Features (October 23-25, 2025)**
+
+1. **Authentication System** ✅
+   - User registration with role-based access
+   - Secure login/logout functionality
+   - Profile management and updates
+   - JWT token-based authentication
+   - Supabase integration
+
+2. **Database Models & Repository Layer** ✅
+   - Complete SQLAlchemy models for all modules
+   - Repository pattern implementation
+   - Database initialization and seeding
+   - Comprehensive testing suite
+   - Security and audit logging
+
+3. **CI/CD Pipeline** ✅
+   - GitGuardian secret scanning
+   - Frontend and backend testing
+   - Integration test suite
+   - Automated deployment pipeline
+
+### 🚧 **Next Development Phase**
+
+**Academic Module Implementation** - *Starting Next*
+- Course management APIs
+- Enrollment system endpoints
+- Attendance tracking APIs
+- Grade management system
+- Academic reporting features
