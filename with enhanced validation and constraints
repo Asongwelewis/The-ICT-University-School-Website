@@ -1,0 +1,226 @@
+[1mdiff --git a/Senior Project 1/backend/app/models/academic.py b/Senior Project 1/backend/app/models/academic.py[m
+[1mindex fb83c20..4037f22 100644[m
+[1m--- a/Senior Project 1/backend/app/models/academic.py[m	
+[1m+++ b/Senior Project 1/backend/app/models/academic.py[m	
+[36m@@ -1,15 +1,61 @@[m
+ """[m
+ Academic models for courses, enrollments, attendance, and grades.[m
+[32m+[m
+[32m+[m[32mThis module provides comprehensive academic management models including:[m
+[32m+[m[32m- Course management with enrollment tracking[m
+[32m+[m[32m- Student enrollment with grade tracking[m
+[32m+[m[32m- Attendance monitoring[m
+[32m+[m[32m- Grade recording and calculation[m
+[32m+[m
+[32m+[m[32mAll models include proper validation, constraints, and business logic methods.[m
+ """[m
+ [m
+[31m-from sqlalchemy import Column, String, Integer, Numeric, Boolean, Date, Text, ForeignKey[m
+[32m+[m[32mfrom enum import Enum[m
+[32m+[m[32mfrom decimal import Decimal, ROUND_HALF_UP[m
+[32m+[m[32mfrom typing import Optional, Tuple[m
+[32m+[m[32mfrom sqlalchemy import ([m
+[32m+[m[32m    Column, String, Integer, Numeric, Boolean, Date, Text, ForeignKey,[m
+[32m+[m[32m    CheckConstraint, UniqueConstraint, Index[m
+[32m+[m[32m)[m
+ from sqlalchemy.dialects.postgresql import UUID[m
+[31m-from sqlalchemy.orm import relationship[m
+[32m+[m[32mfrom sqlalchemy.orm import relationship, validates[m
+[32m+[m[32mfrom sqlalchemy.exc import ValidationError[m
+ from .base import BaseModel[m
+ [m
+ [m
+[32m+[m[32m# Enums for status values[m
+[32m+[m[32mclass EnrollmentStatus(str, Enum):[m
+[32m+[m[32m    """Valid enrollment status values."""[m
+[32m+[m[32m    ENROLLED = "enrolled"[m
+[32m+[m[32m    COMPLETED = "completed"[m
+[32m+[m[32m    DROPPED = "dropped"[m
+[32m+[m[32m    FAILED = "failed"[m
+[32m+[m
+[32m+[m
+[32m+[m[32mclass AttendanceStatus(str, Enum):[m
+[32m+[m[32m    """Valid attendance status values."""[m
+[32m+[m[32m    PRESENT = "present"[m
+[32m+[m[32m    ABSENT = "absent"[m
+[32m+[m[32m    LATE = "late"[m
+[32m+[m[32m    EXCUSED = "excused"[m
+[32m+[m
+[32m+[m
+[32m+[m[32mclass GradeScale(str, Enum):[m
+[32m+[m[32m    """Standard letter grades."""[m
+[32m+[m[32m    A = "A"[m
+[32m+[m[32m    B = "B"[m
+[32m+[m[32m    C = "C"[m
+[32m+[m[32m    D = "D"[m
+[32m+[m[32m    F = "F"[m
+[32m+[m
+[32m+[m
+ class Course(BaseModel):[m
+[31m-    """Course model for academic courses."""[m
+[32m+[m[32m    """[m
+[32m+[m[32m    Course model for academic courses.[m
+[32m+[m[41m    [m
+[32m+[m[32m    Represents academic courses with enrollment tracking, attendance monitoring,[m
+[32m+[m[32m    and grade management capabilities.[m
+[32m+[m[32m    """[m
+     [m
+     __tablename__ = "courses"[m
+ [m
+[36m@@ -30,25 +76,149 @@[m [mclass Course(BaseModel):[m
+     # Status[m
+     is_active = Column(Boolean, default=True)[m
+     [m
+[31m-    # Relationships[m
+[32m+[m[32m    # Database constraints and indexes[m
+[32m+[m[32m    __table_args__ = ([m
+[32m+[m[32m        CheckConstraint("credits >= 1 AND credits <= 6", name='valid_credits'),[m
+[32m+[m[32m        Index('idx_course_code', 'course_code'),[m
+[32m+[m[32m        Index('idx_course_instructor', 'instructor_id'),[m
+[32m+[m[32m        Index('idx_course_department', 'department_id'),[m
+[32m+[m[32m        Index('idx_course_active', 'is_active'),[m
+[32m+[m[32m        Index('idx_course_academic_period', 'academic_year', 'semester'),[m
+[32m+[m[32m    )[m
+[32m+[m[41m    [m
+[32m+[m[32m    # Relationships with optimized loading[m
+     department = relationship("Department", back_populates="courses")[m
+[31m-    instructor = relationship("Profile", back_populates="courses_taught", foreign_keys=[instructor_id])[m
+[31m-    enrollments = relationship("Enrollment", back_populates="course")[m
+[31m-    attendance_records = relationship("Attendance", back_populates="course")[m
+[31m-    grades = relationship("Grade", back_populates="course")[m
+[32m+[m[32m    instructor = relationship([m
+[32m+[m[32m        "Profile",[m[41m [m
+[32m+[m[32m        back_populates="courses_taught",[m[41m [m
+[32m+[m[32m        foreign_keys=[instructor_id][m
+[32m+[m[32m    )[m
+[32m+[m[32m    enrollments = relationship([m
+[32m+[m[32m        "Enrollment",[m[41m [m
+[32m+[m[32m        back_populates="course",[m
+[32m+[m[32m        lazy="select",[m
+[32m+[m[32m        cascade="all, delete-orphan"[m
+[32m+[m[32m    )[m
+[32m+[m[32m    attendance_records = relationship([m
+[32m+[m[32m        "Attendance",[m[41m [m
+[32m+[m[32m        back_populates="course",[m
+[32m+[m[32m        lazy="select"[m
+[32m+[m[32m    )[m
+[32m+[m[32m    grades = relationship([m
+[32m+[m[32m        "Grade",[m[41m [m
+[32m+[m[32m        back_populates="course",[m
+[32m+[m[32m        lazy="select"[m
+[32m+[m[32m    )[m
+[32m+[m[41m    [m
+[32m+[m[32m    # Validation methods[m
+[32m+[m[32m    @validates('credits')[m
+[32m+[m[32m    def validate_credits(self, key, credits):[m
+[32m+[m[32m        """Validate credit hours are within acceptable range."""[m
+[32m+[m[32m        if credits < 1 or credits > 6:[m
+[32m+[m[32m            raise ValidationError("Credits must be between 1 and 6")[m
+[32m+[m[32m        return credits[m
+[32m+[m[41m    [m
+[32m+[m[32m    @validates('course_code')[m
+[32m+[m[32m    def validate_course_code(self, key, course_code):[m
+[32m+[m[32m        """Validate and normalize course code."""[m
+[32m+[m[32m        if not course_code or len(course_code.strip()) < 3:[m
+[32m+[m[32m            raise ValidationError("Course code must be at least 3 characters")[m
+[32m+[m[32m        return course_code.upper().strip()[m
+[32m+[m[41m    [m
+[32m+[m[32m    @validates('course_name')[m
+[32m+[m[32m    def validate_course_name(self, key, course_name):[m
+[32m+[m[32m        """Validate course name."""[m
+[32m+[m[32m        if not course_name or len(course_name.strip()) < 3:[m
+[32m+[m[32m            raise ValidationError("Course name must be at least 3 characters")[m
+[32m+[m[32m        return course_name.strip()[m
+     [m
+     def __repr__(self):[m
+         return f"<Course(id={self.id}, code={self.course_code}, name={self.course_name})>"[m
+     [m
+[32m+[m[32m    # Business logic properties[m
+     @property[m
+     def enrolled_students_count(self) -> int:[m
+[31m-        """Get count of enrolled students."""[m
+[31m-        return len([e for e in self.enrollments if e.status == 'enrolled'])[m
+[32m+[m[32m        """Get count of currently enrolled students."""[m
+[32m+[m[32m        return len([e for e in self.enrollments if e.status == EnrollmentStatus.ENROLLED])[m
+     [m
+     @property[m
+     def instructor_name(self) -> str:[m
+         """Get instructor name."""[m
+         return self.instructor.full_name if self.instructor else "No Instructor"[m
+[32m+[m[41m    [m
+[32m+[m[32m    @property[m
+[32m+[m[32m    def completion_rate(self) -> float:[m
+[32m+[m[32m        """Calculate course completion rate."""[m
+[32m+[m[32m        if not self.enrollments:[m
+[32m+[m[32m            return 0.0[m
+[32m+[m[41m        [m
+[32m+[m[32m        completed = len([e for e in self.enrollments if e.status == EnrollmentStatus.COMPLETED])[m
+[32m+[m[32m        return (completed / len(self.enrollments)) * 100[m
+[32m+[m[41m    [m
+[32m+[m[32m    # Business logic methods[m
+[32m+[m[32m    def can_enroll_student(self, student_id: str, max_enrollment: int = 50) -> Tuple[bool, str]:[m
+[32m+[m[32m        """[m
+[32m+[m[32m        Check if a student can enroll in this course.[m
+[32m+[m[41m        [m
+[32m+[m[32m        Args:[m
+[32m+[m[32m            student_id: ID of the student to check[m
+[32m+[m[32m            max_enrollment: Maximum allowed enrollment (default: 50)[m
+[32m+[m[41m            [m
+[32m+[m[32m        Returns:[m
+[32m+[m[32m            Tuple of (can_enroll: bool, reason: str)[m
+[32m+[m[32m        """[m
+[32m+[m[32m        if not self.is_active:[m
+[32m+[m[32m            return False, "Course is not active"[m
+[32m+[m[41m        [m
+[32m+[m[32m        if self.enrolled_students_count >= max_enrollment:[m
+[32m+[m[32m            return False, "Course is full"[m
+[32m+[m[41m        [m
+[32m+[m[32m        # Check if student is already enrolled[m
+[32m+[m[32m        existing_enrollment = next([m
+[32m+[m[32m            (e for e in self.enrollments[m[41m [m
+[32m+[m[32m             if e.student_id == student_id and e.status == EnrollmentStatus.ENROLLED),[m
+[32m+[m[32m            None[m
+[32m+[m[32m        )[m
+[32m+[m[32m        if existing_enrollment:[m
+[32m+[m[32m            return False, "Student is already enrolled"[m
+[32m+[m[41m        [m
+[32m+[m[32m        return True, "Can enroll"[m
+[32m+[m[41m    [m
+[32m+[m[32m    def get_attendance_rate(self, student_id: Optional[str] = None) -> float:[m
+[32m+[m[32m        """[m
+[32m+[m[32m        Calculate attendance rate for the course or specific student.[m
+[32m+[m[41m        [m
+[32m+[m[32m        Args:[m
+[32m+[m[32m            student_id: Optional student ID to filter by[m
+[32m+[m[41m            [m
+[32m+[m[32m        Returns:[m
+[32m+[m[32m            Attendance rate as percentage[m
+[32m+[m[32m        """[m
+[32m+[m[32m        attendance_records = self.attendance_records[m
+[32m+[m[41m        [m
+[32m+[m[32m        if student_id:[m
+[32m+[m[32m            attendance_records = [a for a in attendance_records if a.student_id == student_id][m
+[32m+[m[41m        [m
+[32m+[m[32m        if not attendance_records:[m
+[32m+[m[32m            return 0.0[m
+[32m+[m[41m        [m
+[32m+[m[32m        present_count = len([[m
+[32m+[m[32m            a for a in attendance_records[m[41m [m
+[32m+[m[32m            if a.status in [AttendanceStatus.PRESENT, AttendanceStatus.LATE][m
+[32m+[m[32m        ])[m
+[32m+[m[32m        return (present_count / len(attendance_records)) * 100[m
+[32m+[m[41m    [m
+[32m+[m[32m    def get_average_grade(self) -> float:[m
+[32m+[m[32m        """Calculate average grade for the course."""[m
+[32m+[m[32m        if not self.grades:[m
+[32m+[m[32m            return 0.0[m
+[32m+[m[41m        [m
+[32m+[m[32m        valid_grades = [g for g in self.grades if g.percentage > 0][m
+[32m+[m[32m        if not valid_grades:[m
+[32m+[m[32m            return 0.0[m
+[32m+[m[41m        [m
+[32m+[m[32m        total_percentage = sum(g.percentage for g in valid_grades)[m
+[32m+[m[32m        return total_percentage / len(valid_grades)[m
+ [m
+ [m
+ class Enrollment(BaseModel):[m
