@@ -25,6 +25,7 @@ class Settings(BaseSettings):
         description="Secret key for JWT token signing. Must be set in production!"
     )
     ALGORITHM: str = "HS256"
+    JWT_ALGORITHM: str = "HS256"  # For backward compatibility
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=30, ge=5, le=1440)  # 5 min to 24 hours
     
     # Database Configuration
@@ -34,6 +35,9 @@ class Settings(BaseSettings):
     )
     SUPABASE_URL: Optional[str] = Field(default=None, description="Supabase project URL")
     SUPABASE_KEY: Optional[str] = Field(default=None, description="Supabase service role key")
+    SUPABASE_ANON_KEY: Optional[str] = Field(default=None, description="Supabase anonymous key")
+    SUPABASE_SERVICE_ROLE_KEY: Optional[str] = Field(default=None, description="Supabase service role key")
+    SUPABASE_JWT_SECRET: Optional[str] = Field(default=None, description="Supabase JWT secret")
     
     # Redis Configuration
     REDIS_URL: str = Field(
@@ -42,20 +46,22 @@ class Settings(BaseSettings):
     )
     
     # CORS Configuration
-    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = Field(
-        default_factory=list,
-        description="List of allowed CORS origins"
+    BACKEND_CORS_ORIGINS: str = Field(
+        default="http://localhost:3000,http://127.0.0.1:3000",
+        description="Comma-separated list of allowed CORS origins"
     )
 
-    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
-    @classmethod
-    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
-        """Parse CORS origins from string or list format."""
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
-            return v
-        raise ValueError(f"Invalid CORS origins format: {v}")
+    # Development Configuration
+    DEBUG: bool = Field(default=False, description="Enable debug mode")
+    HOST: str = Field(default="127.0.0.1", description="Host to bind the server to")
+    PORT: int = Field(default=8000, description="Port to bind the server to")
+
+    @property
+    def cors_origins(self) -> List[str]:
+        """Get CORS origins as a list."""
+        if not self.BACKEND_CORS_ORIGINS:
+            return []
+        return [origin.strip() for origin in self.BACKEND_CORS_ORIGINS.split(",") if origin.strip()]
 
     @field_validator("SECRET_KEY")
     @classmethod
@@ -94,7 +100,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
-        extra = "forbid"  # Prevent typos in environment variables
+        extra = "ignore"  # Allow extra environment variables
 
 
 # Global settings instance

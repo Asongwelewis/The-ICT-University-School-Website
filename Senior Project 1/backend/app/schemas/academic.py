@@ -2,7 +2,7 @@
 Academic module schemas for request/response validation.
 """
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, validator
 from uuid import UUID
 
@@ -123,3 +123,71 @@ class AttendanceResponse(AttendanceBase):
     
     class Config:
         from_attributes = True
+
+
+# Bulk operation schemas
+class BulkGradeCreate(BaseModel):
+    """Schema for bulk grade creation."""
+    grades: List[GradeCreate] = Field(..., description="List of grades to create")
+
+
+class BulkAttendanceCreate(BaseModel):
+    """Schema for bulk attendance creation."""
+    attendance_records: List[AttendanceCreate] = Field(..., description="List of attendance records to create")
+
+
+class BulkEnrollmentRequest(BaseModel):
+    """Schema for bulk student enrollment."""
+    student_ids: List[UUID] = Field(..., description="List of student IDs to enroll")
+
+
+# Response schemas for analytics and reports
+class StudentPerformanceSummary(BaseModel):
+    """Schema for student performance summary."""
+    student_id: UUID
+    total_grades: int
+    gpa: Optional[float]
+    average_score: float
+    grade_distribution: Dict[str, int]
+    course_performance: Dict[str, Any]
+    assessment_breakdown: Dict[str, Any]
+
+
+class CourseAnalytics(BaseModel):
+    """Schema for course analytics."""
+    course_id: UUID
+    total_grades: int
+    average_score: float
+    grade_distribution: Dict[str, int]
+    assessment_breakdown: Dict[str, Any]
+
+
+class AttendanceAnalytics(BaseModel):
+    """Schema for attendance analytics."""
+    course_id: UUID
+    total_records: int
+    attendance_rate: float
+    status_distribution: Dict[str, int]
+    daily_attendance: Dict[str, Dict[str, int]]
+
+
+class AttendanceReport(BaseModel):
+    """Schema for attendance report."""
+    course_id: UUID
+    course_name: str
+    period: Dict[str, str]
+    total_records: int
+    overall_attendance_rate: float
+    student_attendance_rates: Dict[str, float]
+    daily_attendance: Dict[str, Dict[str, int]]
+    status_distribution: Dict[str, int]
+
+
+# Pagination schema
+class PaginatedResponse(BaseModel):
+    """Schema for paginated responses."""
+    items: List[Any]
+    total: int
+    page: int
+    size: int
+    pages: int

@@ -1,11 +1,9 @@
 from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, JSON, ForeignKey, Text
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
+from app.core.database import Base
 import uuid
-
-Base = declarative_base()
 
 
 class Course(Base):
