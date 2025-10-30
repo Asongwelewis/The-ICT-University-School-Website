@@ -1,26 +1,28 @@
 import { redirect } from 'next/navigation'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { ServerAuthUtils, AuthRoutes } from '@/lib/auth-utils'
 
+/**
+ * Home page component that handles authentication routing
+ * 
+ * This component serves as the entry point and redirects users based on:
+ * 1. Supabase configuration status
+ * 2. Current authentication state
+ * 
+ * @returns Redirects to appropriate route based on auth status
+ */
 export default async function Home() {
-  // Check if Supabase is configured before attempting to create client
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  // Check authentication status with comprehensive error handling
+  const authResult = await ServerAuthUtils.checkAuthentication({
+    fallbackToBackendAuth: true,
+    logErrors: true
+  })
   
-  if (!supabaseUrl || !supabaseAnonKey) {
-    // During build or when Supabase is not configured, redirect to login
-    redirect('/auth/login')
+  // Handle authentication errors gracefully
+  if (authResult.error && authResult.error !== 'Supabase not configured') {
+    console.warn('Authentication check failed, redirecting to login:', authResult.error)
   }
-  
-  const supabase = createServerComponentClient({ cookies })
-  
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
 
-  if (session) {
-    redirect('/dashboard')
-  } else {
-    redirect('/auth/login')
-  }
+  // Redirect to appropriate route based on authentication status
+  const redirectUrl = AuthRoutes.getRedirectUrl(authResult.isAuthenticated)
+  redirect(redirectUrl)
 }

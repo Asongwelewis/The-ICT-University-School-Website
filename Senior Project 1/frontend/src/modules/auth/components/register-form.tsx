@@ -27,10 +27,61 @@ export function RegisterForm() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const router = useRouter()
-  const supabase = createClient()
-
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleSupabaseRegister = async () => {
+    const supabase = createClient()
+    if (!supabase) {
+      throw new Error('Supabase not configured')
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+      options: {
+        data: {
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          role: formData.role,
+          student_id: formData.studentId,
+          department: formData.department
+        }
+      }
+    })
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return data.user
+  }
+
+  const handleBackendRegister = async () => {
+    const response = await fetch(process.env.NEXT_PUBLIC_AUTH_REGISTER_URL || 'http://localhost:8000/api/v1/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        student_id: formData.studentId,
+        department: formData.department
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: 'Registration failed' }))
+      throw new Error(errorData.detail || 'Registration failed')
+    }
+
+    const data = await response.json()
+    return data.user
   }
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -59,33 +110,26 @@ export function RegisterForm() {
     }
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            role: formData.role,
-            student_id: formData.studentId,
-            department: formData.department
-          }
-        }
-      })
+      const supabase = createClient()
+      let user
 
-      if (error) {
-        setError(error.message)
-        return
+      if (supabase) {
+        // Use Supabase registration
+        user = await handleSupabaseRegister()
+        setSuccess('Registration successful! Please check your email to verify your account.')
+      } else {
+        // Use backend API registration
+        user = await handleBackendRegister()
+        setSuccess('Registration successful! You can now log in.')
       }
 
-      if (data.user) {
-        setSuccess('Registration successful! Please check your email to verify your account.')
+      if (user) {
         setTimeout(() => {
           router.push('/auth/login')
         }, 3000)
       }
     } catch (err) {
-      setError('An unexpected error occurred')
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred')
     } finally {
       setLoading(false)
     }
@@ -105,7 +149,7 @@ export function RegisterForm() {
             Join the ICT University community
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent className="p-8">
           <form onSubmit={handleRegister} className="space-y-6">
             {error && (
@@ -119,7 +163,7 @@ export function RegisterForm() {
                 <AlertDescription className="text-green-700">{success}</AlertDescription>
               </Alert>
             )}
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName" className="text-gray-700 font-medium">
@@ -269,10 +313,10 @@ export function RegisterForm() {
                 </div>
               </div>
             </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full h-12 button-gradient text-white font-semibold hover:opacity-90 transition-opacity" 
+
+            <Button
+              type="submit"
+              className="w-full h-12 button-gradient text-white font-semibold hover:opacity-90 transition-opacity"
               disabled={loading}
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -282,7 +326,7 @@ export function RegisterForm() {
             <div className="text-center pt-4">
               <p className="text-gray-600">
                 Already have an account?{' '}
-                <Link 
+                <Link
                   href="/auth/login"
                   className="text-blue-600 hover:text-blue-700 font-medium hover:underline"
                 >

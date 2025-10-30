@@ -1,140 +1,31 @@
 /**
- * Supabase client configuration and utilities
- * 
- * This module provides a centralized way to create and manage Supabase clients
- * with proper error handling, environment validation, and utility functions.
- * 
- * @example
- * ```typescript
- * import { createClient, supabaseUtils } from '@/lib/supabase'
- * 
- * const client = createClient()
- * const isAuth = await supabaseUtils.isAuthenticated()
- * ```
+ * Supabase client configuration with graceful fallback handling
+ * Provides type-safe database operations and authentication utilities
  */
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import type { UserProfile, UserRole } from '@/types'
 
-// Environment validation with proper error handling
-interface SupabaseConfig {
-  url: string
-  anonKey: string
+// User profile type definition
+export interface UserProfile {
+  firstName: string
+  lastName: string
+  phone?: string
+  avatar?: string
+  dateOfBirth?: string
+  address?: {
+    street: string
+    city: string
+    state: string
+    zipCode: string
+    country: string
+  }
+  studentId?: string
+  department?: string
 }
 
-enum RuntimeEnvironment {
-  CLIENT_SIDE = 'client',
-  SERVER_SIDE = 'server',
-  DEVELOPMENT = 'development'
-}
+// User role type
+export type UserRole = 'admin' | 'student' | 'staff'
 
-class SupabaseConfigValidator {
-  private static getEnvironmentType(): RuntimeEnvironment {
-    if (typeof window !== 'undefined') return RuntimeEnvironment.CLIENT_SIDE
-    if (process.env.NODE_ENV === 'development') return RuntimeEnvironment.DEVELOPMENT
-    return RuntimeEnvironment.SERVER_SIDE
-  }
-
-  private static validateRequiredVars(url?: string, anonKey?: string): string[] {
-    const missingVars: string[] = []
-    if (!url) missingVars.push('NEXT_PUBLIC_SUPABASE_URL')
-    if (!anonKey) missingVars.push('NEXT_PUBLIC_SUPABASE_ANON_KEY')
-    return missingVars
-  }
-
-  private static handleMissingVars(missingVars: string[], envType: RuntimeEnvironment): void {
-    const errorMessage = `Missing required environment variables: ${missingVars.join(', ')}`
-    
-    switch (envType) {
-      case RuntimeEnvironment.DEVELOPMENT:
-        console.error(`❌ Supabase Configuration Error: ${errorMessage}`)
-        console.info('💡 Please check your .env.local file and ensure all Supabase variables are set')
-        break
-      case RuntimeEnvironment.SERVER_SIDE:
-        console.warn(`⚠️ Supabase not configured during build: ${errorMessage}`)
-        break
-      case RuntimeEnvironment.CLIENT_SIDE:
-        throw new Error(errorMessage)
-    }
-  }
-
-  private static validateUrlFormat(url: string, envType: RuntimeEnvironment): boolean {
-    try {
-      new URL(url)
-      return true
-    } catch {
-      if (envType === RuntimeEnvironment.CLIENT_SIDE) {
-        throw new Error('NEXT_PUBLIC_SUPABASE_URL must be a valid URL')
-      }
-      console.warn('⚠️ Invalid Supabase URL during build')
-      return false
-    }
-  }
-
-  static validate(): SupabaseConfig | null {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    const envType = this.getEnvironmentType()
-
-    const missingVars = this.validateRequiredVars(url, anonKey)
-    
-    if (missingVars.length > 0) {
-      this.handleMissingVars(missingVars, envType)
-      return envType === RuntimeEnvironment.CLIENT_SIDE ? null : null
-    }
-
-    if (!this.validateUrlFormat(url!, envType)) {
-      return null
-    }
-
-    return { url: url!, anonKey: anonKey! }
-  }
-}
-
-function validateEnvironment(): SupabaseConfig | null {
-  return SupabaseConfigValidator.validate()
-}
-
-// Validate configuration on module load - but handle gracefully if missing
-const supabaseConfig = validateEnvironment()
-
-// Helper to check if Supabase is properly configured
-export const isSupabaseConfigured = (): boolean => !!supabaseConfig
-
-// Configuration constants with better structure and validation
-export const SUPABASE_CONFIG = supabaseConfig ? {
-  url: supabaseConfig.url,
-  anonKey: supabaseConfig.anonKey,
-  options: {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      flowType: 'pkce' as const, // More secure flow
-      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-      storageKey: 'supabase.auth.token',
-      debug: process.env.NODE_ENV === 'development'
-    },
-    db: {
-      schema: 'public'
-    },
-    global: {
-      headers: {
-        'X-Client-Info': 'school-erp-frontend'
-      }
-    }
-  }
-} as const : null
-
-// Export configuration status for debugging
-export const CONFIG_STATUS = {
-  isConfigured: isSupabaseConfigured(),
-  environment: process.env.NODE_ENV,
-  hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-  hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  timestamp: new Date().toISOString()
-} as const
-
-// Database type definitions
+// Database type definitions with proper typing
 export type Database = {
   public: {
     Tables: {
@@ -177,197 +68,211 @@ export type Database = {
   }
 }
 
-// Type-safe client interface
+// Supabase client type
 type SupabaseClient = ReturnType<typeof createClientComponentClient<Database>>
 
-// Improved Singleton Pattern with proper error handling and type safety
-class SupabaseClientManager {
-  private static instance: SupabaseClient | null = null
-  private static initializationError: Error | null = null
+// Configuration constants
+const PLACEHOLDER_VALUES = {
+  URL: 'your_supabase_url_here',
+  KEY: 'your_supabase_anon_key_here'
+} as const
 
-  static getInstance(): SupabaseClient {
-    // Return cached error if initialization previously failed
-    if (this.initializationError) {
-      throw this.initializationError
-    }
+const ENV_KEYS = {
+  SUPABASE_URL: 'NEXT_PUBLIC_SUPABASE_URL',
+  SUPABASE_ANON_KEY: 'NEXT_PUBLIC_SUPABASE_ANON_KEY'
+} as const
 
-    // Return existing instance if available
-    if (this.instance) {
-      return this.instance
-    }
-
-    // Validate configuration before creating client
-    if (!supabaseConfig) {
-      const error = new Error('Supabase configuration is not available. Please check your environment variables.')
-      this.initializationError = error
-      throw error
-    }
-
-    try {
-      this.instance = createClientComponentClient<Database>({
-        supabaseUrl: supabaseConfig.url,
-        supabaseKey: supabaseConfig.anonKey,
-      })
-      return this.instance
-    } catch (error) {
-      const wrappedError = new Error(
-        `Supabase client initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      )
-      this.initializationError = wrappedError
-      console.error('Failed to create Supabase client:', error)
-      throw wrappedError
-    }
-  }
-
-  static reset(): void {
-    this.instance = null
-    this.initializationError = null
-  }
-
-  static isInitialized(): boolean {
-    return this.instance !== null && this.initializationError === null
+// Error handling
+export class SupabaseError extends Error {
+  constructor(
+    message: string,
+    public readonly code: string,
+    public readonly originalError?: unknown
+  ) {
+    super(message)
+    this.name = 'SupabaseError'
   }
 }
 
-// Factory function for creating new clients (useful for testing)
-export const createClient = (): SupabaseClient => {
-  if (!supabaseConfig) {
-    throw new Error('Supabase configuration is not available. Cannot create client without proper environment variables.')
+export const ERROR_CODES = {
+  NOT_CONFIGURED: 'SUPABASE_NOT_CONFIGURED',
+  CLIENT_CREATION_FAILED: 'CLIENT_CREATION_FAILED',
+  AUTH_OPERATION_FAILED: 'AUTH_OPERATION_FAILED'
+} as const
+
+// URL validation helper
+const isValidUrl = (url: string): boolean => {
+  try {
+    new URL(url)
+    return url.startsWith('https://') || url.startsWith('http://')
+  } catch {
+    return false
   }
+}
+
+// Check if Supabase is properly configured
+export const isSupabaseConfigured = (): boolean => {
+  const url = process.env[ENV_KEYS.SUPABASE_URL]
+  const key = process.env[ENV_KEYS.SUPABASE_ANON_KEY]
   
-  return createClientComponentClient<Database>({
-    supabaseUrl: supabaseConfig.url,
-    supabaseKey: supabaseConfig.anonKey,
-  })
+  return !!(
+    url && 
+    key && 
+    url !== PLACEHOLDER_VALUES.URL && 
+    key !== PLACEHOLDER_VALUES.KEY &&
+    isValidUrl(url)
+  )
 }
 
-// Main client getter using singleton pattern
-export const getSupabaseClient = (): SupabaseClient => SupabaseClientManager.getInstance()
+// Create Supabase client or return null if not configured
+export const createClient = (): SupabaseClient | null => {
+  if (!isSupabaseConfigured()) {
+    console.info('🔄 Supabase not configured - using backend API authentication')
+    return null
+  }
 
-// Result types for better error handling
-interface AuthResult<T> {
+  try {
+    return createClientComponentClient<Database>()
+  } catch (error) {
+    const supabaseError = new SupabaseError(
+      'Failed to create Supabase client',
+      ERROR_CODES.CLIENT_CREATION_FAILED,
+      error
+    )
+    console.warn(supabaseError.message, supabaseError)
+    return null
+  }
+}
+
+// Configuration management with caching
+class ConfigurationManager {
+  private static _configStatus: {
+    isConfigured: boolean
+    hasUrl: boolean
+    hasKey: boolean
+    message: string
+  } | null = null
+
+  static get configStatus() {
+    if (!this._configStatus) {
+      const isConfigured = isSupabaseConfigured()
+      this._configStatus = {
+        isConfigured,
+        hasUrl: !!process.env[ENV_KEYS.SUPABASE_URL],
+        hasKey: !!process.env[ENV_KEYS.SUPABASE_ANON_KEY],
+        message: isConfigured 
+          ? 'Supabase configured and ready' 
+          : 'Using backend API authentication'
+      }
+    }
+    return this._configStatus
+  }
+
+  static resetCache(): void {
+    this._configStatus = null
+  }
+}
+
+// Configuration status for debugging
+export const CONFIG_STATUS = ConfigurationManager.configStatus
+
+// Result types for consistent API responses
+export interface AuthResult<T = any> {
   data: T | null
   error: Error | null
 }
 
-// Utility functions for common operations with improved error handling
-export const supabaseUtils = {
+// Utility class for common Supabase operations
+class SupabaseUtils {
   /**
-   * Check if user is authenticated
-   * @returns Promise<boolean> - true if authenticated, false otherwise
+   * Higher-order function to handle client operations with consistent error handling
    */
-  async isAuthenticated(): Promise<boolean> {
-    if (!isSupabaseConfigured()) {
-      console.warn('Supabase not configured - treating as unauthenticated')
-      return false
-    }
+  private static async withClient<T>(
+    operation: (client: SupabaseClient) => Promise<T>,
+    fallbackValue: T,
+    errorMessage: string = 'Supabase operation failed'
+  ): Promise<T> {
+    const client = createClient()
+    if (!client) return fallbackValue
     
     try {
-      const client = getSupabaseClient()
-      const { data: { session }, error } = await client.auth.getSession()
-      
-      if (error) {
-        console.error('Error checking authentication status:', error)
-        return false
-      }
-      
-      return !!session
+      return await operation(client)
     } catch (error) {
-      console.error('Failed to check authentication status:', error)
-      return false
-    }
-  },
-
-  /**
-   * Get current user with comprehensive error handling
-   * @returns Promise<AuthResult<User>> - user data or error
-   */
-  async getCurrentUser(): Promise<AuthResult<any>> {
-    if (!isSupabaseConfigured()) {
-      return {
-        data: null,
-        error: new Error('Supabase not configured')
-      }
-    }
-    
-    try {
-      const client = getSupabaseClient()
-      const { data: { user }, error } = await client.auth.getUser()
-      
-      return {
-        data: user,
-        error: error ? new Error(error.message) : null
-      }
-    } catch (error) {
-      return {
-        data: null,
-        error: error instanceof Error ? error : new Error('Unknown error occurred')
-      }
-    }
-  },
-
-  /**
-   * Sign out with proper cleanup and error handling
-   * @returns Promise<AuthResult<void>> - success status or error
-   */
-  async signOut(): Promise<AuthResult<void>> {
-    if (!isSupabaseConfigured()) {
-      return {
-        data: null,
-        error: new Error('Supabase not configured')
-      }
-    }
-    
-    try {
-      const client = getSupabaseClient()
-      SupabaseClientManager.reset() // Reset singleton
-      const { error } = await client.auth.signOut()
-      
-      return {
-        data: null,
-        error: error ? new Error(error.message) : null
-      }
-    } catch (error) {
-      return {
-        data: null,
-        error: error instanceof Error ? error : new Error('Sign out failed')
-      }
-    }
-  },
-
-  /**
-   * Handle auth state changes with proper error handling
-   * @param callback - Function to call on auth state change
-   * @returns Subscription object or null if not configured
-   */
-  onAuthStateChange(callback: (event: string, session: any) => void) {
-    if (!isSupabaseConfigured()) {
-      console.warn('Supabase not configured - auth state changes will not be monitored')
-      return { data: { subscription: null } }
-    }
-    
-    try {
-      const client = getSupabaseClient()
-      return client.auth.onAuthStateChange(callback)
-    } catch (error) {
-      console.error('Failed to set up auth state change listener:', error)
-      return { data: { subscription: null } }
-    }
-  },
-
-  /**
-   * Health check for Supabase connection
-   * @returns Promise<boolean> - true if connection is healthy
-   */
-  async healthCheck(): Promise<boolean> {
-    if (!isSupabaseConfigured()) return false
-    
-    try {
-      const client = getSupabaseClient()
-      const { error } = await client.auth.getSession()
-      return !error
-    } catch {
-      return false
+      const supabaseError = new SupabaseError(
+        errorMessage,
+        ERROR_CODES.AUTH_OPERATION_FAILED,
+        error
+      )
+      console.warn(supabaseError.message, supabaseError)
+      return fallbackValue
     }
   }
+
+  /**
+   * Check if user is currently authenticated
+   */
+  static async isAuthenticated(): Promise<boolean> {
+    return this.withClient(
+      async (client) => {
+        const { data: { session } } = await client.auth.getSession()
+        return !!session
+      },
+      false,
+      'Failed to check authentication status'
+    )
+  }
+
+  /**
+   * Get current user information
+   */
+  static async getCurrentUser(): Promise<AuthResult> {
+    return this.withClient(
+      async (client) => {
+        const { data: { user }, error } = await client.auth.getUser()
+        return { 
+          data: user, 
+          error: error ? new Error(error.message) : null 
+        }
+      },
+      { data: null, error: new SupabaseError('Supabase not configured', ERROR_CODES.NOT_CONFIGURED) },
+      'Failed to get current user'
+    )
+  }
+
+  /**
+   * Sign out current user
+   */
+  static async signOut(): Promise<AuthResult<null>> {
+    return this.withClient(
+      async (client) => {
+        const { error } = await client.auth.signOut()
+        return { 
+          data: null, 
+          error: error ? new Error(error.message) : null 
+        }
+      },
+      { data: null, error: new SupabaseError('Supabase not configured', ERROR_CODES.NOT_CONFIGURED) },
+      'Failed to sign out user'
+    )
+  }
+
+  /**
+   * Get user session information
+   */
+  static async getSession(): Promise<AuthResult> {
+    return this.withClient(
+      async (client) => {
+        const { data: { session }, error } = await client.auth.getSession()
+        return { 
+          data: session, 
+          error: error ? new Error(error.message) : null 
+        }
+      },
+      { data: null, error: new SupabaseError('Supabase not configured', ERROR_CODES.NOT_CONFIGURED) },
+      'Failed to get session'
+    )
+  }
 }
+
+// Export utilities as singleton
+export const supabaseUtils = SupabaseUtils

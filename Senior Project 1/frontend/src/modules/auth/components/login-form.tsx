@@ -1,8 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -10,40 +8,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Mail, Lock, GraduationCap } from 'lucide-react'
 import Link from 'next/link'
+import { useAuthForm } from '@/hooks/use-auth-form'
+
+interface LoginFormData {
+  email: string
+  password: string
+}
 
 export function LoginForm() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const router = useRouter()
-  const supabase = createClient()
+  const [formData, setFormData] = useState<LoginFormData>({
+    email: '',
+    password: ''
+  })
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const { loading, error, authMode, handleLogin } = useAuthForm({
+    redirectTo: '/dashboard'
+  })
+
+  const handleInputChange = (field: keyof LoginFormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
-    setError('')
-
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (error) {
-        setError(error.message)
-        return
-      }
-
-      if (data.user) {
-        router.push('/dashboard')
-        router.refresh()
-      }
-    } catch (err) {
-      setError('An unexpected error occurred')
-    } finally {
-      setLoading(false)
-    }
+    await handleLogin(formData)
   }
 
   return (
@@ -63,7 +51,7 @@ export function LoginForm() {
         </CardHeader>
         
         <CardContent className="p-8">
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={onSubmit} className="space-y-6">
             {error && (
               <Alert variant="destructive" className="border-red-200 bg-red-50">
                 <AlertDescription className="text-red-700">{error}</AlertDescription>
@@ -79,8 +67,8 @@ export function LoginForm() {
                 <Input
                   id="email"
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
                   className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                   placeholder="Enter your email"
                   required
@@ -98,8 +86,8 @@ export function LoginForm() {
                 <Input
                   id="password"
                   type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={formData.password}
+                  onChange={(e) => handleInputChange('password', e.target.value)}
                   className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                   placeholder="Enter your password"
                   required
@@ -124,10 +112,10 @@ export function LoginForm() {
             <Button 
               type="submit" 
               className="w-full h-12 button-gradient text-white font-semibold hover:opacity-90 transition-opacity" 
-              disabled={loading}
+              disabled={loading || authMode === null}
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {loading ? 'Signing In...' : 'Sign In'}
+              {loading ? 'Signing In...' : authMode === null ? 'Loading...' : 'Sign In'}
             </Button>
 
             <div className="text-center pt-4">

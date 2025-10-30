@@ -108,3 +108,81 @@
     background-size: 20px 20px;
   }
 }
+
+/* Remove autofill yellow background - comprehensive solution */
+@layer base {
+  /* Webkit browsers (Chrome, Safari, Edge) */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px white inset !important;
+    -webkit-text-fill-color: rgb(15 23 42) !important;
+    box-shadow: 0 0 0 1000px white inset !important;
+    background-color: white !important;
+    background-image: none !important;
+    color: rgb(15 23 42) !important;
+    transition: background-color 5000s ease-in-out 0s !important;
+  }
+  
+  input:-webkit-autofill::first-line {
+    color: rgb(15 23 42) !important;
+    font-family: inherit !important;
+  }
+  
+  /* For dark mode */
+  .dark input:-webkit-autofill,
+  .dark input:-webkit-autofill:hover,
+  .dark input:-webkit-autofill:focus,
+  .dark input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px rgb(30 41 59) inset !important;
+    -webkit-text-fill-color: rgb(248 250 252) !important;
+    box-shadow: 0 0 0 1000px rgb(30 41 59) inset !important;
+    background-color: rgb(30 41 59) !important;
+    background-image: none !important;
+    color: rgb(248 250 252) !important;
+    transition: background-color 5000s ease-in-out 0s !important;
+  }
+  
+  .dark input:-webkit-autofill::first-line {
+    color: rgb(248 250 252) !important;
+    font-family: inherit !important;
+  }
+  
+  /* Firefox */
+  input:-moz-autofill {
+    background-color: white !important;
+    color: rgb(15 23 42) !important;
+  }
+  
+  .dark input:-moz-autofill {
+    background-color: rgb(30 41 59) !important;
+    color: rgb(248 250 252) !important;
+  }
+  
+  /* Additional browser compatibility */
+  input[data-autocompleted] {
+    background-color: white !important;
+    color: rgb(15 23 42) !important;
+  }
+  
+  .dark input[data-autocompleted] {
+    background-color: rgb(30 41 59) !important;
+    color: rgb(248 250 252) !important;
+  }
+  
+  /* Force override for all input types */
+  input[type="email"]:-webkit-autofill,
+  input[type="password"]:-webkit-autofill,
+  input[type="text"]:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px white inset !important;
+    -webkit-text-fill-color: rgb(15 23 42) !important;
+  }
+  
+  .dark input[type="email"]:-webkit-autofill,
+  .dark input[type="password"]:-webkit-autofill,
+  .dark input[type="text"]:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px rgb(30 41 59) inset !important;
+    -webkit-text-fill-color: rgb(248 250 252) !important;
+  }
+}
