@@ -3,7 +3,9 @@ import {
   isSupabaseConfigured, 
   getConfigStatus, 
   SupabaseConfigError,
-  validateSupabaseConfig 
+  validateSupabaseConfig,
+  type ConfigError,
+  type ConfigWarning
 } from './supabase-config'
 
 /**
@@ -59,8 +61,8 @@ export const createClient = (options: { strict?: boolean } = {}) => {
     // Log configuration issues in development (client-side)
     if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
       console.warn('⚠️ Supabase Client: Configuration issues detected');
-      validation.errors.forEach(error => console.warn(`  ❌ ${error}`));
-      validation.warnings.forEach(warning => console.warn(`  ⚠️ ${warning}`));
+      validation.errors.forEach((error: any) => console.warn(`  ❌ ${error.message || error}`));
+      validation.warnings.forEach((warning: any) => console.warn(`  ⚠️ ${warning.message || warning}`));
       console.warn('  🔧 Using mock client. Check your .env.local file.');
     }
     
@@ -114,10 +116,10 @@ export const CONFIG_STATUS = {
   get hasKey(): boolean {
     return getConfigStatus().hasAnonKey;
   },
-  get errors(): string[] {
+  get errors(): ConfigError[] {
     return getConfigStatus().errors;
   },
-  get warnings(): string[] {
+  get warnings(): ConfigWarning[] {
     return getConfigStatus().warnings;
   }
 };
@@ -227,8 +229,8 @@ export const supabaseUtils = {
     isHealthy: boolean;
     isConfigured: boolean;
     canConnect: boolean;
-    errors: string[];
-    warnings: string[];
+    errors: any[];
+    warnings: any[];
     latency?: number;
   }> {
     const startTime = Date.now();
@@ -239,8 +241,8 @@ export const supabaseUtils = {
         isHealthy: false,
         isConfigured: false,
         canConnect: false,
-        errors: configStatus.errors,
-        warnings: configStatus.warnings
+        errors: configStatus.errors.map((e: any) => e.message || e),
+        warnings: configStatus.warnings.map((w: any) => w.message || w)
       };
     }
 

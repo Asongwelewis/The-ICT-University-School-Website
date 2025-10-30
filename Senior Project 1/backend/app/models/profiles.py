@@ -110,6 +110,11 @@ class Profile(Base, TimestampMixin, AuditMixin):
     # Campaigns created
     campaigns_created = relationship("Campaign", back_populates="creator", foreign_keys="Campaign.created_by")
     
+    # New relationships for announcements, timetables, and notes
+    announcements = relationship("Announcement", back_populates="author")
+    timetables = relationship("Timetable", back_populates="instructor")
+    course_notes = relationship("CourseNote", back_populates="author")
+    
     # Add table constraints
     __table_args__ = (
         CheckConstraint(
