@@ -8,6 +8,7 @@ import { useLogout } from '@/hooks/use-logout'
 import { DashboardHeader } from './components/dashboard-header'
 import { SidebarNavigation } from './components/sidebar-navigation'
 import { DashboardLayoutProps } from './types/dashboard-types'
+import { ChatWidget } from '@/components/ai/chat-widget'
 
 
 
@@ -73,6 +74,9 @@ export function DashboardLayout({
       >
         {children}
       </main>
+
+      {/* AI Chat Widget - Available on all dashboard pages */}
+      <ChatWidget />
     </div>
   )
 }

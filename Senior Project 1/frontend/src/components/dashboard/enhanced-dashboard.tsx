@@ -7,6 +7,7 @@ import { statIcons, getIcon } from '@/lib/icons'
 import { Loader2, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
 import { UserDebug } from '@/components/debug/user-debug'
+import { ChatWidget } from '@/components/ai/chat-widget'
 
 // Role-based configuration using Strategy pattern
 const ROLE_CONFIG = {
@@ -235,6 +236,9 @@ export function EnhancedDashboard() {
           </CardContent>
         </Card>
       )}
+
+      {/* AI Chat Widget */}
+      <ChatWidget />
     </div>
   )
 }

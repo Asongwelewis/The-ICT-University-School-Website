@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { BookOpen, Award, CheckCircle, DollarSign } from 'lucide-react'
 import Link from 'next/link'
+import { ChatWidget } from '@/components/ai/chat-widget'
 
 export function StudentDashboard() {
   return (
@@ -95,6 +96,9 @@ export function StudentDashboard() {
           </Card>
         </Link>
       </div>
+
+      {/* AI Chat Widget */}
+      <ChatWidget />
     </div>
   )
 }
