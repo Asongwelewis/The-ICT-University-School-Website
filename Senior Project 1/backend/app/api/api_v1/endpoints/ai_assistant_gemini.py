@@ -10,7 +10,7 @@ from app.models.profiles import Profile
 router = APIRouter()
 
 # Gemini Pro configuration
-GEMINI_API_KEY = "AIzaSyD3CKz4x_MiqHfxfBbwfNPfkrmFUTiw3Ck"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "your_gemini_api_key_here")
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
 
 @router.get("/status")
