@@ -5,12 +5,12 @@
 ### ✅ 1. Gemini API Key Configuration
 **Frontend**: Already configured in `.env.local`
 ```env
-NEXT_PUBLIC_GEMINI_API_KEY=AIzaSyD3CKz4x_MiqHfxfBbwfNPfkrmFUTiw3Ck
+NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
 **Backend**: Already configured in `.env`
 ```env
-GEMINI_API_KEY=AIzaSyD3CKz4x_MiqHfxfBbwfNPfkrmFUTiw3Ck
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
 ### ✅ 2. Real Data Instead of Mock Data
