@@ -144,6 +144,9 @@ class Settings(BaseSettings):
     CURRENT_ACADEMIC_YEAR: str = "2024-2025"
     SEMESTER_START_MONTH: int = 9  # September
     
+    # AI Configuration
+    GEMINI_API_KEY: str = Field(default="", env="GEMINI_API_KEY")
+    
 
     
     @property

@@ -1,163 +1,290 @@
-/* stylelint-disable at-rule-no-unknown */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 24.6 95% 53.1%;
-    --primary-foreground: 60 9.1% 97.8%;
-    --secondary: 217.2 91.2% 59.8%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 33.3 100% 96.5%;
-    --muted-foreground: 25 5.3% 44.7%;
-    --accent: 214.3 31.8% 91.4%;
-    --accent-foreground: 222.2 84% 4.9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 24.6 95% 53.1%;
-    --radius: 0.5rem;
-  }
+@custom-variant dark (&:is(.dark *));
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 24.6 95% 53.1%;
-    --primary-foreground: 60 9.1% 97.8%;
-    --secondary: 217.2 91.2% 59.8%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 24.6 95% 53.1%;
-  }
+:root {
+  --font-size: 14px;
+  --background: #ffffff;
+  --foreground: oklch(0.145 0 0);
+  --card: #ffffff;
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  
+  /* Orange as primary color */
+  --primary: #f97316; /* orange-500 */
+  --primary-foreground: #ffffff;
+  
+  /* Blue as secondary color */
+  --secondary: #3b82f6; /* blue-500 */
+  --secondary-foreground: #ffffff;
+  
+  --muted: #fef7ed; /* orange-50 */
+  --muted-foreground: #78716c; /* warm gray */
+  --accent: #dbeafe; /* blue-100 */
+  --accent-foreground: #1e40af; /* blue-800 */
+  --destructive: #dc2626; /* red-600 */
+  --destructive-foreground: #ffffff;
+  --border: rgba(249, 115, 22, 0.2); /* orange with opacity */
+  --input: transparent;
+  --input-background: #fef7ed; /* orange-50 */
+  --switch-background: #fed7aa; /* orange-200 */
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --ring: #f97316; /* orange-500 */
+  
+  /* Chart colors with orange/blue theme */
+  --chart-1: #f97316; /* orange-500 */
+  --chart-2: #3b82f6; /* blue-500 */
+  --chart-3: #fb923c; /* orange-400 */
+  --chart-4: #60a5fa; /* blue-400 */
+  --chart-5: #fdba74; /* orange-300 */
+  
+  --radius: 0.625rem;
+  
+  /* Sidebar with orange theme */
+  --sidebar: #fff7ed; /* orange-50 */
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: #f97316; /* orange-500 */
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fed7aa; /* orange-200 */
+  --sidebar-accent-foreground: #9a3412; /* orange-800 */
+  --sidebar-border: rgba(249, 115, 22, 0.2);
+  --sidebar-ring: #f97316;
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: #1c1917; /* warm gray-900 */
+  --card-foreground: oklch(0.985 0 0);
+  --popover: #1c1917;
+  --popover-foreground: oklch(0.985 0 0);
+  
+  /* Orange primary in dark mode */
+  --primary: #fb923c; /* orange-400 for better contrast in dark */
+  --primary-foreground: #1c1917;
+  
+  /* Blue secondary in dark mode */
+  --secondary: #60a5fa; /* blue-400 for better contrast in dark */
+  --secondary-foreground: #1e3a8a; /* blue-900 */
+  
+  --muted: #292524; /* warm gray-800 */
+  --muted-foreground: #a8a29e; /* warm gray-400 */
+  --accent: #1e3a8a; /* blue-900 */
+  --accent-foreground: #dbeafe; /* blue-100 */
+  --destructive: #ef4444; /* red-500 */
+  --destructive-foreground: #ffffff;
+  --border: rgba(251, 146, 60, 0.3); /* orange-400 with opacity */
+  --input: #292524; /* warm gray-800 */
+  --input-background: #292524;
+  --switch-background: #451a03; /* orange-950 */
+  --ring: #fb923c; /* orange-400 */
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  
+  /* Dark mode chart colors */
+  --chart-1: #fb923c; /* orange-400 */
+  --chart-2: #60a5fa; /* blue-400 */
+  --chart-3: #fdba74; /* orange-300 */
+  --chart-4: #93c5fd; /* blue-300 */
+  --chart-5: #fed7aa; /* orange-200 */
+  
+  /* Dark sidebar */
+  --sidebar: #1c1917; /* warm gray-900 */
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: #fb923c; /* orange-400 */
+  --sidebar-primary-foreground: #1c1917;
+  --sidebar-accent: #292524; /* warm gray-800 */
+  --sidebar-accent-foreground: #fdba74; /* orange-300 */
+  --sidebar-border: rgba(251, 146, 60, 0.3);
+  --sidebar-ring: #fb923c;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  
+  /* Additional orange and blue color variants */
+  --color-orange-50: #fff7ed;
+  --color-orange-100: #ffedd5;
+  --color-orange-200: #fed7aa;
+  --color-orange-300: #fdba74;
+  --color-orange-400: #fb923c;
+  --color-orange-500: #f97316;
+  --color-orange-600: #ea580c;
+  --color-orange-700: #c2410c;
+  --color-orange-800: #9a3412;
+  --color-orange-900: #7c2d12;
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+  --color-blue-800: #1e40af;
+  --color-blue-900: #1e3a8a;
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border outline-ring/50;
   }
+  
   body {
     @apply bg-background text-foreground;
   }
 }
 
-/* Base typography */
+/**
+ * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
+ */
 @layer base {
   :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
     h1 {
-      font-size: 1.5rem;
+      font-size: var(--text-2xl);
       font-weight: var(--font-weight-medium);
       line-height: 1.5;
-      color: var(--foreground);
+      color: var(--color-foreground);
     }
     
     h2 {
-      font-size: 1.25rem;
+      font-size: var(--text-xl);
       font-weight: var(--font-weight-medium);
       line-height: 1.5;
-      color: var(--foreground);
+      color: var(--color-foreground);
     }
     
     h3 {
-      font-size: 1.125rem;
+      font-size: var(--text-lg);
       font-weight: var(--font-weight-medium);
       line-height: 1.5;
-      color: var(--foreground);
+      color: var(--color-foreground);
     }
     
     h4 {
-      font-size: 1rem;
+      font-size: var(--text-base);
       font-weight: var(--font-weight-medium);
       line-height: 1.5;
-      color: var(--foreground);
+      color: var(--color-foreground);
     }
     
     p {
-      font-size: 1rem;
+      font-size: var(--text-base);
       font-weight: var(--font-weight-normal);
       line-height: 1.5;
-      color: var(--foreground);
+      color: var(--color-foreground);
     }
     
     label {
-      font-size: 1rem;
+      font-size: var(--text-base);
       font-weight: var(--font-weight-medium);
       line-height: 1.5;
-      color: var(--foreground);
+      color: var(--color-foreground);
     }
     
     button {
-      font-size: 1rem;
+      font-size: var(--text-base);
       font-weight: var(--font-weight-medium);
       line-height: 1.5;
     }
     
     input {
-      font-size: 1rem;
+      font-size: var(--text-base);
       font-weight: var(--font-weight-normal);
       line-height: 1.5;
     }
   }
 }
 
+html {
+  font-size: var(--font-size);
+}
+
 /* Custom orange and blue utility classes */
 @layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
   .text-orange-primary {
-    color: #f97316;
+    color: var(--color-orange-500);
   }
   
   .text-blue-secondary {
-    color: #3b82f6;
+    color: var(--color-blue-500);
   }
   
   .bg-orange-primary {
-    background-color: #f97316;
+    background-color: var(--color-orange-500);
   }
   
   .bg-blue-secondary {
-    background-color: #3b82f6;
+    background-color: var(--color-blue-500);
   }
   
   .border-orange-primary {
-    border-color: #f97316;
+    border-color: var(--color-orange-500);
   }
   
   .border-blue-secondary {
-    border-color: #3b82f6;
+    border-color: var(--color-blue-500);
   }
   
   .hover\:bg-orange-600:hover {
-    background-color: #ea580c;
+    background-color: var(--color-orange-600);
   }
   
   .hover\:bg-blue-600:hover {
-    background-color: #2563eb;
+    background-color: var(--color-blue-600);
   }
   
   .header-gradient {
-    background: linear-gradient(to right, #f97316, #ea580c);
+    background: linear-gradient(to right, var(--color-orange-500), var(--color-orange-600));
   }
   
   .button-gradient {
-    background: linear-gradient(to right, #3b82f6, #2563eb);
+    background: linear-gradient(to right, var(--color-blue-500), var(--color-blue-600));
   }
   
   .card-shadow {
@@ -165,12 +292,12 @@
   }
   
   .orange-accent {
-    border-left: 4px solid #f97316;
-    background-color: #fff7ed;
+    border-left: 4px solid var(--color-orange-500);
+    background-color: var(--color-orange-50);
   }
   
   .blue-accent {
-    border-left: 4px solid #3b82f6;
-    background-color: #eff6ff;
+    border-left: 4px solid var(--color-blue-500);
+    background-color: var(--color-blue-50);
   }
 }

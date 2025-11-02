@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import { useState, useCallback, useEffect } from 'react'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { ComprehensiveAIAgent } from '@/lib/comprehensive-ai-agent'
@@ -196,10 +197,144 @@ export const useAIChat = (): UseAIChatReturn => {
     lastUpdated: null,
     cacheSize: 0
   }
+=======
+'use client';
+
+import { useState, useCallback, useRef, useEffect } from 'react';
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+  status?: 'sending' | 'sent' | 'error';
+}
+
+export interface ChatContext {
+  current_page?: string;
+  course_id?: string;
+  assignment_id?: string;
+  [key: string]: any;
+}
+
+interface UseChatOptions {
+  context?: ChatContext;
+  maxHistoryLength?: number;
+}
+
+export function useAIChat({ context, maxHistoryLength = 10 }: UseChatOptions = {}) {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const generateMessageId = () => `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+  const addMessage = useCallback((message: Omit<ChatMessage, 'id'>) => {
+    const newMessage: ChatMessage = {
+      ...message,
+      id: generateMessageId(),
+    };
+    setMessages(prev => [...prev.slice(-(maxHistoryLength - 1)), newMessage]);
+    return newMessage.id;
+  }, [maxHistoryLength]);
+
+  const updateMessageStatus = useCallback((messageId: string, status: ChatMessage['status']) => {
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId ? { ...msg, status } : msg
+    ));
+  }, []);
+
+  const sendMessage = useCallback(async (content: string): Promise<void> => {
+    if (!content.trim() || isLoading) return;
+
+    // Cancel any ongoing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    const userMessageId = addMessage({
+      role: 'user',
+      content: content.trim(),
+      timestamp: new Date().toISOString(),
+      status: 'sent'
+    });
+
+    setIsLoading(true);
+    abortControllerRef.current = new AbortController();
+
+    try {
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: content.trim(),
+          context,
+          conversation_history: messages.slice(-5).map(({ id, status, ...msg }) => msg)
+        }),
+        signal: abortControllerRef.current.signal
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      addMessage({
+        role: 'assistant',
+        content: data.response,
+        timestamp: new Date().toISOString(),
+        status: 'sent'
+      });
+
+      setSuggestions(data.suggestions || []);
+
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        return; // Request was cancelled
+      }
+
+      addMessage({
+        role: 'assistant',
+        content: 'Sorry, I\'m having trouble connecting right now. Please check your internet connection and try again.',
+        timestamp: new Date().toISOString(),
+        status: 'error'
+      });
+
+      console.error('Chat error:', error);
+    } finally {
+      setIsLoading(false);
+      abortControllerRef.current = null;
+    }
+  }, [addMessage, context, isLoading, messages]);
+
+  const clearMessages = useCallback(() => {
+    setMessages([]);
+    setSuggestions([]);
+  }, []);
+
+  const retryLastMessage = useCallback(() => {
+    const lastUserMessage = [...messages].reverse().find(msg => msg.role === 'user');
+    if (lastUserMessage) {
+      sendMessage(lastUserMessage.content);
+    }
+  }, [messages, sendMessage]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+>>>>>>> Stashed changes
 
   return {
     messages,
     isLoading,
+<<<<<<< Updated upstream
     sendMessage,
     clearMessages,
     cacheStats
@@ -290,4 +425,13 @@ function getFallbackResponse(prompt: string): string {
   }
   
   return `I understand you're asking about "${prompt}". I'm having trouble accessing your specific data right now, but I can still help guide you to the right section of your dashboard. What would you like to do?`
+=======
+    suggestions,
+    sendMessage,
+    clearMessages,
+    retryLastMessage,
+    addMessage,
+    updateMessageStatus
+  };
+>>>>>>> Stashed changes
 }

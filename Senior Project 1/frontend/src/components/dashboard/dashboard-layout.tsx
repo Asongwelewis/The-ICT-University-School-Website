@@ -1,26 +1,42 @@
 'use client'
 
-import { useMemo } from 'react'
-import { useAuth } from '@/hooks/useAuth'
-import { useNavigation } from '@/hooks/use-navigation'
-import { useSidebarMenu } from '@/hooks/use-sidebar-menu'
-import { useLogout } from '@/hooks/use-logout'
 import { DashboardHeader } from './components/dashboard-header'
 import { SidebarNavigation } from './components/sidebar-navigation'
 import { DashboardLayoutProps } from './types/dashboard-types'
+<<<<<<< Updated upstream
 import { ChatWidget } from '@/components/ai/chat-widget'
 
 
+=======
+import { AIProvider } from './providers/ai-provider'
+import { DashboardErrorBoundary } from './components/dashboard-error-boundary-enhanced'
+import { useDashboardLayout } from '@/hooks/use-dashboard-layout'
+import { usePerformanceMonitor, useLifecycleMonitor } from '@/hooks/use-performance-monitor'
+>>>>>>> Stashed changes
 
 /**
- * Main dashboard layout component with fixed header and sidebar navigation
+ * Main dashboard layout component with enterprise-grade architecture
  * 
  * Features:
  * - Fixed header with user info and logout
  * - Slide-out sidebar navigation
- * - Responsive design
+ * - Responsive design with mobile-first approach
  * - Keyboard navigation support
- * - Accessibility compliant
+ * - Accessibility compliant (WCAG 2.1 AA)
+ * - Separated AI functionality for better maintainability
+ * - Performance optimized with custom hook and memoization
+ * - Error boundary for graceful error handling
+ * - Performance monitoring in development
+ * 
+ * Architecture:
+ * - Single Responsibility: Layout structure only
+ * - Composition: AI features handled by AIProvider
+ * - Custom Hook: Logic extracted to useDashboardLayout
+ * - Error Handling: Wrapped in error boundary
+ * - Performance: Memoized expensive computations + monitoring
+ * - Accessibility: Proper ARIA labels and roles
+ * - Maintainability: Clean separation of concerns
+ * - Observability: Performance and lifecycle monitoring
  */
 export function DashboardLayout({ 
   children, 
@@ -28,44 +44,31 @@ export function DashboardLayout({
   headerClassName = "",
   mainClassName = ""
 }: DashboardLayoutProps) {
-  const { user } = useAuth()
-  const { handleLogout, isLoggingOut } = useLogout()
-  const { 
-    isMenuOpen, 
-    menuRef, 
-    toggleMenu, 
-    closeMenu, 
-    handleMenuKeyDown 
-  } = useSidebarMenu()
+  // Performance monitoring (development only)
+  usePerformanceMonitor('DashboardLayout')
+  useLifecycleMonitor('DashboardLayout')
 
-  // Memoize user display values to prevent unnecessary re-renders
-  const userDisplayInfo = useMemo(() => ({
-    displayName: user?.full_name || user?.email || 'User',
-    roleDisplay: user?.role?.replace('_', ' ') || 'Unknown'
-  }), [user?.full_name, user?.email, user?.role])
-
-  // Get navigation items using the custom hook
-  const navigationItems = useNavigation(user?.role)
+  // Extract all layout logic to custom hook
+  const {
+    layoutClasses,
+    headerProps,
+    sidebarProps
+  } = useDashboardLayout(className, mainClassName)
 
   return (
-    <div className={`min-h-screen bg-white ${className}`}>
-      <DashboardHeader
-        displayName={userDisplayInfo.displayName}
-        roleDisplay={userDisplayInfo.roleDisplay}
-        isLoggingOut={isLoggingOut}
-        onLogout={handleLogout}
-        className={headerClassName}
-      />
+    <DashboardErrorBoundary>
+      <AIProvider>
+        <div className={layoutClasses.container}>
+          <DashboardHeader
+            {...headerProps}
+            className={headerClassName}
+          />
 
-      <SidebarNavigation
-        isMenuOpen={isMenuOpen}
-        navigationItems={navigationItems}
-        menuRef={menuRef}
-        onToggleMenu={toggleMenu}
-        onCloseMenu={closeMenu}
-        onMenuKeyDown={handleMenuKeyDown}
-      />
+          <SidebarNavigation
+            {...sidebarProps}
+          />
 
+<<<<<<< Updated upstream
       {/* Main Content with top padding for fixed header */}
       <main 
         className={`pt-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${mainClassName}`}
@@ -78,5 +81,22 @@ export function DashboardLayout({
       {/* AI Chat Widget - Available on all dashboard pages */}
       <ChatWidget />
     </div>
+=======
+          {/* Main Content Area */}
+          <main 
+            className={layoutClasses.main}
+            role="main"
+            aria-label="Dashboard content"
+            id="main-content"
+          >
+            {children}
+          </main>
+        </div>
+      </AIProvider>
+    </DashboardErrorBoundary>
+>>>>>>> Stashed changes
   )
 }
+
+// Export enhanced version with additional features
+export { DashboardLayout as default }

@@ -50,11 +50,31 @@ export interface NavigationItem {
 }
 
 /**
- * User display information
+ * User display information with enhanced type safety
  */
 export interface UserDisplayInfo {
   displayName: string
   roleDisplay: string
+}
+
+/**
+ * Layout CSS classes for memoization
+ */
+export interface LayoutClasses {
+  container: string
+  main: string
+}
+
+/**
+ * Enhanced dashboard layout props with better defaults
+ */
+export interface EnhancedDashboardLayoutProps extends DashboardLayoutProps {
+  /** Enable AI features (default: true) */
+  enableAI?: boolean
+  /** Custom loading component */
+  loadingComponent?: React.ComponentType
+  /** Error boundary fallback */
+  errorFallback?: React.ComponentType<{ error: Error }>
 }
 
 /**

@@ -12,7 +12,7 @@ This module combines all API endpoints into a single router:
 
 from fastapi import APIRouter
 
-from app.api.api_v1.endpoints import auth, academic, finance, hr, marketing, admin
+from app.api.api_v1.endpoints import auth, academic, finance, hr, marketing, admin, ai_assistant_gemini
 
 # Create main API router
 api_router = APIRouter()
@@ -59,4 +59,11 @@ api_router.include_router(
     admin.router, 
     prefix="/admin", 
     tags=["System Administration"]
+)
+
+# AI Assistant endpoints - educational AI chat and assistance (Gemini Pro)
+api_router.include_router(
+    ai_assistant_gemini.router, 
+    prefix="/ai", 
+    tags=["AI Assistant"]
 )
